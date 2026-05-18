@@ -13,3 +13,5 @@ RUN apt-get update \
     && npm install -g @devcontainers/cli \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+RUN id node
