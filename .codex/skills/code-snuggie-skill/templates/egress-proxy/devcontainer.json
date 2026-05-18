@@ -1,0 +1,22 @@
+{
+  "name": "Project Dev",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "app",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "<repo-install-command>",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "OpenAI.chatgpt"
+      ]
+    }
+  }
+}
