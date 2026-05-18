@@ -1,0 +1,24 @@
+{
+  "name": "Remotion Fixture",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "OpenAI.chatgpt",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "postCreateCommand": "npm install",
+  "remoteUser": "node",
+  "forwardPorts": [
+    3000
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Remotion Studio",
+      "onAutoForward": "notify"
+    }
+  }
+}

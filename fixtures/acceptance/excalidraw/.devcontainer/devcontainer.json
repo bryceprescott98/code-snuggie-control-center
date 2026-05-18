@@ -1,0 +1,27 @@
+{
+  "name": "Excalidraw Fixture",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "OpenAI.chatgpt",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "postCreateCommand": "corepack enable && corepack prepare yarn@1.22.22 --activate && yarn install --frozen-lockfile",
+  "remoteUser": "node",
+  "forwardPorts": [
+    3000
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Vite dev server",
+      "onAutoForward": "notify"
+    }
+  }
+}

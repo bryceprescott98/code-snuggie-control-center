@@ -11,12 +11,18 @@ Create a dev container setup that works before handoff. Prefer a small, boring c
 
 ## Workflow
 
-1. Inspect the repo before choosing a container shape:
+1. Create or use a job workspace when operating from the Code Snuggie workbench:
+   - Start with `npm run job:new -- <job-name> <github-url|npm-package-or-url>`.
+   - For GitHub sources, clone with `npm run job:clone -- <job-name> <github-url> [ref]`.
+   - For npm starter sources, generate with `npm run job:npm-harness -- <job-name> <package-or-url> [create-command...]`.
+   - Work inside `.code-snuggie/jobs/<job-name>/workspace/`.
+   - Keep `JOB.md`, `LOG.md`, and `VALIDATION.md` current as work proceeds.
+2. Inspect the repo before choosing a container shape:
    - Manifests and lockfiles: `package.json`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `pyproject.toml`, `requirements*.txt`, `uv.lock`, `poetry.lock`, `Pipfile.lock`, `environment.yml`.
    - Version hints: `.nvmrc`, `.node-version`, `engines.node`, `.python-version`, `runtime.txt`, `requires-python`.
    - Entrypoints and checks: README setup steps, scripts, Makefile targets, CI workflows, Dockerfiles, Compose files, test config, lint/typecheck config.
    - Runtime needs: ports, databases, Redis, queues, browsers, native packages, OS libraries, private registries, required environment variables.
-2. Select the simplest reproducible shape:
+3. Select the simplest reproducible shape:
    - Use `.devcontainer/devcontainer.json` as the default location.
    - Use an official `mcr.microsoft.com/devcontainers/...` image when it already covers the runtime.
    - Check the official Dev Container Features catalog when adding portable tools such as GitHub CLI, Node, Python, Docker-in-Docker, or common CLIs: https://containers.dev/features
@@ -24,24 +30,39 @@ Create a dev container setup that works before handoff. Prefer a small, boring c
    - Add `.devcontainer/Dockerfile` only for apt packages, browser/system libraries, native build dependencies, or tools that should be cached in the image.
    - Use Docker Compose when the repo already depends on app-adjacent services or has a working compose setup. Keep the development service alive with a sleep loop if its normal command exits.
    - For AI-agent-facing containers that need restricted egress, read `references/networking.md` and adapt `templates/egress-proxy/`, which uses Squid as the bundled default proxy implementation.
-3. Preserve repo conventions:
+4. Preserve repo conventions:
    - Use the package manager and install mode implied by the lockfile.
    - Configure `postCreateCommand` or an equivalent lifecycle command so dependencies are installed before the user starts development.
    - Keep the interactive development user non-root, normally the devcontainer image's `vscode` user. Do not set `remoteUser`, Compose `user`, or app/lifecycle commands to `root` unless the repo has a documented requirement and the risk is explained.
    - Use the runtime version implied by repo files; if no version is discoverable, choose the current stable official devcontainer image and note the assumption.
    - Do not replace existing Docker/Compose semantics unless they are clearly unsuitable for development.
-4. Add VS Code customizations:
+5. Add VS Code customizations:
    - Always include `OpenAI.chatgpt` in `customizations.vscode.extensions`.
    - Add stack-specific extensions only when they clearly improve first-open use, such as `dbaeumer.vscode-eslint`, `esbenp.prettier-vscode`, `ms-python.python`, `ms-python.vscode-pylance`, or `ms-python.black-formatter`.
-5. Handle secrets safely:
+6. Handle secrets safely:
    - Never write secret values into committed files.
    - If a variable is required, document it with `secrets` in `devcontainer.json` or with a committed `.env.example` only when the repo already uses that convention.
    - Use `remoteEnv` or `containerEnv` only for non-secret defaults.
-6. Validate before handoff:
+7. Validate before handoff:
    - Read `references/validation.md`.
+   - Run `npm run check:devcontainer -- <workspace>/.devcontainer/devcontainer.json` from the workbench when available.
+   - Use `npm test` for deterministic workbench fixtures.
+   - Use `npm run test:live -- [remotion|excalidraw|all]` only when real network/package/GitHub validation is intended.
    - Build and start the dev container when Docker/devcontainer tooling is available.
    - Run the repo's install, checks, and start smoke test inside the container.
+   - Update `VALIDATION.md` with every important command, its working directory, result, first failing command if any, and the security review of privileges, networking, mounts, secrets, and egress.
    - Do not claim the setup is ready if the container builds but project dependencies, tests, or documented start commands fail. Report the exact blocker and remaining command.
+8. Publish only after validation passes:
+   - Confirm no secrets are present.
+   - Confirm generated `.devcontainer/` passes static checks.
+   - Push only the generated project workspace, not job metadata.
+   - In the workbench, use `npm run job:publish -- <job-name> <repo-name-or-owner/repo> [description]` when ambient `gh` auth is available.
+
+## Approval Posture
+
+Routine workbench actions are expected inside this repository and `.code-snuggie/jobs/`: creating/updating job folders, cloning GitHub repositories into job workspaces, installing dependencies, running builds/tests/lints/dev-server smoke checks, running Dev Container validation, and creating private GitHub repositories with ambient `gh` auth.
+
+Ask before boundary crossings: writing outside this workspace or job folders, destructive host operations, reading undeclared secrets, expanding network or egress assumptions, or adding privileged containers, host networking, host Docker socket mounts, or broad host credential mounts.
 
 ## Reference Selection
 

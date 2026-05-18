@@ -1,0 +1,22 @@
+{
+  "name": "code-snuggie-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UI-free Codespace workbench for running Codex as a devcontainer setup agent.",
+  "type": "module",
+  "scripts": {
+    "job:new": "bash scripts/new-job.sh",
+    "job:clone": "bash scripts/clone-github-source.sh",
+    "job:npm-harness": "bash scripts/create-npm-harness.sh",
+    "job:publish": "bash scripts/publish-private-repo.sh",
+    "job:cleanup": "bash scripts/cleanup-jobs.sh",
+    "check:devcontainer": "node scripts/check-devcontainer.mjs",
+    "validate:summary": "bash scripts/validation-summary.sh",
+    "test:live": "bash scripts/run-live-acceptance.sh",
+    "test:fixtures": "bash scripts/run-acceptance-fixtures.sh",
+    "test": "npm run check:devcontainer -- .devcontainer/devcontainer.json && npm run test:fixtures"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

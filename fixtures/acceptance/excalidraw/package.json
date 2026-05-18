@@ -1,0 +1,23 @@
+{
+  "name": "code-snuggie-excalidraw-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Representative Excalidraw repo fixture for Code Snuggie acceptance checks.",
+  "packageManager": "yarn@1.22.22",
+  "scripts": {
+    "start": "yarn start:app",
+    "start:app": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "vitest": "latest",
+    "typescript": "latest"
+  }
+}

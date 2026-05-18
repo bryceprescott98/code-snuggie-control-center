@@ -1,0 +1,13 @@
+{
+  "name": "Unsafe Fixture",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "OpenAI.chatgpt"
+      ]
+    }
+  },
+  "privileged": true,
+  "remoteUser": "root"
+}
