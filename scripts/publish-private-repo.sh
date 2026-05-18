@@ -27,15 +27,17 @@ if [[ -z "$(find "$workspace" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
   exit 65
 fi
 
-if grep -R -I -E "(OPENAI_API_KEY|GITHUB_TOKEN|BEGIN [A-Z ]*PRIVATE KEY)" "$workspace" >/dev/null; then
-  echo "Secret-like material found in workspace; refusing to publish." >&2
-  exit 78
-fi
-
 (
   cd "$workspace"
   if [[ ! -d .git ]]; then
     git init
+  fi
+
+  mapfile -d '' publishable_files < <(git ls-files --cached --others --exclude-standard -z)
+  if ((${#publishable_files[@]} > 0)) \
+    && grep -I -E "(OPENAI_API_KEY|GITHUB_TOKEN|BEGIN [A-Z ]*PRIVATE KEY)" -- "${publishable_files[@]}" >/dev/null; then
+    echo "Secret-like material found in publishable workspace files; refusing to publish." >&2
+    exit 78
   fi
 
   git add .
