@@ -44,6 +44,7 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - [x] Codex can create job folders and validate devcontainers.
   - [x] Codex has helper commands for cloning GitHub repos and publishing generated workspaces.
   - [x] Codex can live-clone repos, install dependencies, and push generated repos without repeated routine permission prompts.
+  - [x] Generated development containers install `ripgrep` and `jq` so Codex can navigate code and inspect structured command output inside the codespace.
 - Remotion:
   - Given `https://www.npmjs.com/package/remotion`, Codex creates a repo equivalent to `npx create-video@latest`.
   - The repo has devcontainer support, installs dependencies, runs available checks/builds, starts the Remotion dev workflow, and is pushed privately after validation.
@@ -130,6 +131,9 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - Added `--require-restricted-egress` validation for internal-network Compose wiring, pinned Squid, proxy environment, and required allowlist entries.
   - Made `job:publish` run the restricted-egress validation by default, with `CODE_SNUGGIE_ALLOW_UNRESTRICTED_EGRESS=1` reserved for documented exceptions.
   - Moved acceptance fixtures under `tests/fixtures/acceptance/` and documented that they are test-only representative workspaces, not reusable templates.
+- 2026-05-19: Added baseline Codex navigation tools to generated container requirements:
+  - Updated the `code-snuggie` skill, validation reference, egress template, and Node guidance so every generated development container includes `ripgrep` and `jq`.
+  - Updated acceptance fixtures and static checks to reject devcontainers that do not explicitly install those tools.
 
 ## Assumptions
 

@@ -167,6 +167,28 @@ const requiredSquidDomains = [
   ".openai.com",
   ".oaiusercontent.com",
 ];
+const configuredDockerfiles = asArray(config.build?.dockerfile);
+const devcontainerSupportFiles = [
+  ...configuredDockerfiles.map((dockerfile) =>
+    dockerfile.startsWith("/") ? dockerfile : join(devcontainerDir, dockerfile)
+  ),
+  join(devcontainerDir, "Dockerfile"),
+  ...asArray(config.dockerComposeFile).map((composeFile) =>
+    composeFile.startsWith("/") ? composeFile : join(devcontainerDir, composeFile)
+  ),
+].filter((file, index, files) => files.indexOf(file) === index);
+const devcontainerToolText = [
+  JSON.stringify(config),
+  ...devcontainerSupportFiles
+    .filter((file) => existsSync(file))
+    .map((file) => readText(file)),
+].join("\n").toLowerCase();
+
+for (const tool of ["ripgrep", "jq"]) {
+  if (!new RegExp(`\\b${tool}\\b`).test(devcontainerToolText)) {
+    fail(`Devcontainer must explicitly install ${tool} for Codex navigation.`);
+  }
+}
 
 if (!extensions.includes("OpenAI.chatgpt")) {
   fail("Missing required VS Code extension: OpenAI.chatgpt");

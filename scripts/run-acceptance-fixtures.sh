@@ -42,7 +42,10 @@ fi
 mkdir -p "$tmp/overbroad-repo-access/.devcontainer"
 cat > "$tmp/overbroad-repo-access/.devcontainer/devcontainer.json" <<'EOF'
 {
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
   "customizations": {
     "vscode": {
       "extensions": ["OpenAI.chatgpt"]
@@ -61,6 +64,15 @@ cat > "$tmp/overbroad-repo-access/.devcontainer/devcontainer.json" <<'EOF'
   }
 }
 EOF
+cat > "$tmp/overbroad-repo-access/.devcontainer/Dockerfile" <<'EOF'
+FROM mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm
+
+RUN apt-get update \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends jq ripgrep \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+EOF
 if node "$root/scripts/check-devcontainer.mjs" "$tmp/overbroad-repo-access/.devcontainer/devcontainer.json" >"$tmp/overbroad-repo-access.out" 2>&1; then
   cat "$tmp/overbroad-repo-access.out" >&2
   echo "Overbroad repository-access fixture unexpectedly passed." >&2
@@ -68,16 +80,47 @@ if node "$root/scripts/check-devcontainer.mjs" "$tmp/overbroad-repo-access/.devc
 fi
 assert_contains "$tmp/overbroad-repo-access.out" "Overbroad Codespaces repository permission"
 
-mkdir -p "$tmp/missing-egress/.devcontainer"
-cat > "$tmp/missing-egress/.devcontainer/devcontainer.json" <<'EOF'
+mkdir -p "$tmp/missing-agent-tools/.devcontainer"
+cat > "$tmp/missing-agent-tools/.devcontainer/devcontainer.json" <<'EOF'
 {
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm",
+  "name": "Missing Agent Tools",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
   "customizations": {
     "vscode": {
       "extensions": ["OpenAI.chatgpt"]
     }
   }
 }
+EOF
+if node "$root/scripts/check-devcontainer.mjs" "$tmp/missing-agent-tools/.devcontainer/devcontainer.json" >"$tmp/missing-agent-tools.out" 2>&1; then
+  cat "$tmp/missing-agent-tools.out" >&2
+  echo "Devcontainer missing ripgrep and jq unexpectedly passed." >&2
+  exit 1
+fi
+assert_contains "$tmp/missing-agent-tools.out" "Devcontainer must explicitly install ripgrep"
+
+mkdir -p "$tmp/missing-egress/.devcontainer"
+cat > "$tmp/missing-egress/.devcontainer/devcontainer.json" <<'EOF'
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["OpenAI.chatgpt"]
+    }
+  }
+}
+EOF
+cat > "$tmp/missing-egress/.devcontainer/Dockerfile" <<'EOF'
+FROM mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm
+
+RUN apt-get update \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends jq ripgrep \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 EOF
 if node "$root/scripts/check-devcontainer.mjs" --require-restricted-egress "$tmp/missing-egress/.devcontainer/devcontainer.json" >"$tmp/missing-egress.out" 2>&1; then
   cat "$tmp/missing-egress.out" >&2

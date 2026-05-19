@@ -12,18 +12,19 @@ Run this reference before handing off any Codespaces/devcontainer setup. A devco
    - `build.dockerfile`, or
    - `dockerComposeFile` plus `service`.
 3. Confirm `customizations.vscode.extensions` contains `OpenAI.chatgpt`.
-4. Confirm lifecycle commands are repo-aware:
+4. Confirm the development container explicitly installs `ripgrep` and `jq` for Codex navigation and structured-output inspection. If the base image does not document both tools, add them in `.devcontainer/Dockerfile` or an equivalent image-build step.
+5. Confirm lifecycle commands are repo-aware:
    - `postCreateCommand` installs dependencies using the repo's package manager.
    - Commands do not require interactive input.
    - Commands are finite: no dev servers, watchers, browser-open commands, prompts, or background jobs that keep the lifecycle spinner alive.
    - Commands do not write secrets.
    - Commands run as the non-root development user, not as `root`.
-5. Confirm no template placeholders remain, such as `<repo-install-command>` or generic copied names.
-6. Confirm ports match actual app commands and include useful `portsAttributes` labels.
+6. Confirm no template placeholders remain, such as `<repo-install-command>` or generic copied names.
+7. Confirm ports match actual app commands and include useful `portsAttributes` labels.
    - For web apps, verify ports against env files and framework config, not just framework defaults.
    - Prefer `onAutoForward: "notify"` unless the user asks for automatic browser launch.
    - Confirm the documented start command itself binds to the forwarded port. Do not validate with extra CLI flags unless those flags are committed into the script or README.
-7. Confirm networking does not include avoidable bypasses:
+8. Confirm networking does not include avoidable bypasses:
    - No `--network=host` or `network_mode: host`.
    - No `--privileged` or `privileged: true` unless explicitly required.
    - No Docker socket mount unless Docker control is required and the risk is documented.
@@ -31,16 +32,16 @@ Run this reference before handing off any Codespaces/devcontainer setup. A devco
    - No broad host port ranges published when `forwardPorts` is sufficient.
    - Generated AI-agent-facing Codespaces use the Squid egress proxy template, an internal app network, a pinned `ubuntu/squid` image tag, and a checked allowlist unless unrestricted egress is explicitly approved and documented.
    - Squid sidecars run in the foreground with `squid -N -f /etc/squid/squid.conf`, include `http_port 3128`, and avoid parent/subdomain duplicates within the same `dstdomain` ACL.
-8. Confirm secrets are not committed:
+9. Confirm secrets are not committed:
    - No real tokens, passwords, cloud keys, or private registry credentials.
    - Required secret names appear in `secrets` or documentation only.
-9. Confirm Codespaces repository permissions are least-privilege:
+10. Confirm Codespaces repository permissions are least-privilege:
    - `customizations.codespaces.repositories` is absent unless the codespace must access another repository.
    - Repository entries are exact `owner/repo` names, not broad owner/org patterns.
    - Default write permissions are limited to `contents: write` and `pull_requests: write`.
    - No `actions`, `workflows`, `administration`, `packages`, `secrets`, or other write permissions are present unless explicitly approved and documented in `VALIDATION.md`.
    - If workflow files cannot be pushed with the available token, document that limitation or ask for a narrowly scoped follow-up token/app instead of broadening the Codespaces token by default.
-10. Confirm the interactive container user is non-root:
+11. Confirm the interactive container user is non-root:
    - Prefer the official devcontainer image default, usually `vscode`.
    - Do not set `remoteUser`, Compose `user`, `containerUser`, or app service commands to `root` unless a repo-specific need is documented.
    - Root is acceptable for Dockerfile image-build steps such as `apt-get install`; it is not acceptable as the default user for normal development, dependency installs, tests, or app commands.
@@ -63,6 +64,8 @@ Then run project checks inside the created container:
 
 ```bash
 devcontainer exec --workspace-folder . <install-or-verify-command>
+devcontainer exec --workspace-folder . rg --version
+devcontainer exec --workspace-folder . jq --version
 devcontainer exec --workspace-folder . <test-command>
 devcontainer exec --workspace-folder . <build-or-typecheck-command>
 ```

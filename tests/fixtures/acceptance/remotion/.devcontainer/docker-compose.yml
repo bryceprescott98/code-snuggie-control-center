@@ -1,6 +1,8 @@
 services:
   dev:
-    image: mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
+    build:
+      context: .
+      dockerfile: Dockerfile
     command: sleep infinity
     volumes:
       - ..:/workspace:cached

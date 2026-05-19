@@ -1,6 +1,8 @@
 services:
   dev:
-    image: mcr.microsoft.com/devcontainers/base:1-bookworm
+    build:
+      context: .
+      dockerfile: Dockerfile
     command: sleep infinity
     volumes:
       - ..:/workspace:cached

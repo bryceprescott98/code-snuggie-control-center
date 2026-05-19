@@ -24,7 +24,7 @@ Prefer an image-only config when the repo only needs Node plus normal package in
 }
 ```
 
-Use a Dockerfile when apt packages or browser dependencies are needed:
+Generated Code Snuggie containers must include `ripgrep` and `jq` for Codex. Use a Dockerfile when the selected base image does not explicitly provide those tools, or when any additional apt packages or browser dependencies are needed:
 
 ```jsonc
 {
@@ -44,8 +44,10 @@ RUN apt-get update \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
       build-essential \
+      jq \
       python3 \
       pkg-config \
+      ripgrep \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 ```

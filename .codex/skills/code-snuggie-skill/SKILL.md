@@ -34,6 +34,7 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
 4. Select the simplest reproducible shape:
    - Use `.devcontainer/devcontainer.json` as the default location.
    - Use an official `mcr.microsoft.com/devcontainers/...` image when it already covers the runtime.
+   - Ensure every generated development container has `ripgrep` and `jq` installed so Codex can navigate source quickly and inspect structured command output inside the codespace. Add a small `.devcontainer/Dockerfile` or equivalent image-build step when the base image does not explicitly provide them.
    - Check the official Dev Container Features catalog when adding portable tools such as GitHub CLI, Node, Python, Docker-in-Docker, or common CLIs: https://containers.dev/features
    - Before adding or keeping a Dev Container Feature version, confirm the latest available major version from the official catalog or the feature's source `devcontainer-feature.json`, and use that latest major unless the repo has a specific compatibility reason to stay older. Record any intentional older pin in `VALIDATION.md`.
    - Check the official Dev Container Templates catalog when a repo closely matches a standard stack, but adapt the result to the repo instead of copying a generic template wholesale: https://containers.dev/templates
@@ -69,6 +70,7 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Use `npm run test:live -- [remotion|excalidraw|all]` only when real network/package/GitHub validation is intended.
    - Build and start the dev container when Docker/devcontainer tooling is available.
    - Run the repo's install, checks, and start smoke test inside the container.
+   - Confirm `rg --version` and `jq --version` work inside the development container.
    - For web apps, run the exact documented start command, not a one-off command with extra flags. Confirm the process binds to `0.0.0.0` when needed, record the actual port printed by the server, and make sure `forwardPorts`/`portsAttributes` match that actual port or documented fallback ports.
    - Avoid leaving validation dev servers running. Stop the smoke-test process and confirm no stray listener is occupying the tested port before judging Codespaces forwarding behavior.
    - Prefer `onAutoForward: "notify"` unless the user asks for automatic browser launch; it is less surprising for VS Code Desktop users and apps with fallback ports.
