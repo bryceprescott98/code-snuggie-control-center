@@ -29,7 +29,9 @@ Code Snuggie is a an agent that createx a reliable devcontainer setup for anothe
 
 4. Create a new codespace from that commit and approve the repository-access prompt from GitHub.
 
-5. Ask Codex what you want generated. Examples:
+5. Before starting the Codex thread, select **Full Access** for the thread permissions. Use a more restrictive permission mode only if you want Codex to ask before routine actions like creating files, installing dependencies, running checks, committing, pushing, or opening a pull request.
+
+6. Ask Codex what you want generated. Examples:
 
    ```text
    Create a Codespaces-ready repo for https://github.com/excalidraw/excalidraw and open a PR to my-org/my-generated-app.
