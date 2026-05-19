@@ -30,7 +30,13 @@ Run this reference before handing off any Codespaces/devcontainer setup. A devco
 8. Confirm secrets are not committed:
    - No real tokens, passwords, cloud keys, or private registry credentials.
    - Required secret names appear in `secrets` or documentation only.
-9. Confirm the interactive container user is non-root:
+9. Confirm Codespaces repository permissions are least-privilege:
+   - `customizations.codespaces.repositories` is absent unless the codespace must access another repository.
+   - Repository entries are exact `owner/repo` names, not broad owner/org patterns.
+   - Default write permissions are limited to `contents: write` and `pull_requests: write`.
+   - No `actions`, `workflows`, `administration`, `packages`, `secrets`, or other write permissions are present unless explicitly approved and documented in `VALIDATION.md`.
+   - If workflow files cannot be pushed with the available token, document that limitation or ask for a narrowly scoped follow-up token/app instead of broadening the Codespaces token by default.
+10. Confirm the interactive container user is non-root:
    - Prefer the official devcontainer image default, usually `vscode`.
    - Do not set `remoteUser`, Compose `user`, `containerUser`, or app service commands to `root` unless a repo-specific need is documented.
    - Root is acceptable for Dockerfile image-build steps such as `apt-get install`; it is not acceptable as the default user for normal development, dependency installs, tests, or app commands.
@@ -123,6 +129,7 @@ Mark the setup ready only when:
 - `devcontainer read-configuration`, `build`, and `up` pass, or unavailable tooling is explicitly reported.
 - Dockerfile/Compose validation passes when those files exist.
 - In-container dependency install and repo checks pass.
+- Repository permissions are absent or limited to the exact repos and write scopes needed.
 - Any untested step is documented with the exact command and reason it could not be run.
 
 If any required command fails, fix the config and rerun validation. If the failure is a pre-existing project issue, capture the failing command, relevant output, and why the devcontainer itself is still correct.

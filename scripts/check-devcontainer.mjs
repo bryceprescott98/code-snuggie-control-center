@@ -36,6 +36,7 @@ const config = readJson(path);
 const extensions = config.customizations?.vscode?.extensions ?? [];
 const strings = collectStrings(config);
 const warnings = [];
+const allowedCodespacesWritePermissions = new Set(["contents", "pull_requests"]);
 
 if (!extensions.includes("OpenAI.chatgpt")) {
   fail("Missing required VS Code extension: OpenAI.chatgpt");
@@ -60,6 +61,27 @@ if (mountText.includes("/var/run/docker.sock")) {
 
 if (/\.ssh|\.gnupg|\.aws|\.config\/gh|GITHUB_TOKEN|OPENAI_API_KEY/.test(mountText)) {
   fail("Potential host credentials or secret values are referenced in committed devcontainer config.");
+}
+
+const repositoryAccess = config.customizations?.codespaces?.repositories;
+if (repositoryAccess && typeof repositoryAccess === "object" && !Array.isArray(repositoryAccess)) {
+  for (const [repository, access] of Object.entries(repositoryAccess)) {
+    if (!/^[^/\s]+\/[^/\s]+$/.test(repository)) {
+      fail(`Codespaces repository access must use an exact owner/repo name: ${repository}`);
+    }
+
+    const permissions = access?.permissions;
+    if (!permissions || typeof permissions !== "object" || Array.isArray(permissions)) {
+      fail(`Codespaces repository access for ${repository} must declare explicit permissions.`);
+      continue;
+    }
+
+    for (const [permission, level] of Object.entries(permissions)) {
+      if (level === "write" && !allowedCodespacesWritePermissions.has(permission)) {
+        fail(`Overbroad Codespaces repository permission for ${repository}: ${permission}: write`);
+      }
+    }
+  }
 }
 
 if (Array.isArray(config.forwardPorts)) {

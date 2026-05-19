@@ -38,6 +38,35 @@ if node "$root/scripts/check-devcontainer.mjs" "$root/fixtures/acceptance/unsafe
   exit 1
 fi
 
+mkdir -p "$tmp/overbroad-repo-access/.devcontainer"
+cat > "$tmp/overbroad-repo-access/.devcontainer/devcontainer.json" <<'EOF'
+{
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm",
+  "customizations": {
+    "vscode": {
+      "extensions": ["OpenAI.chatgpt"]
+    },
+    "codespaces": {
+      "repositories": {
+        "example/generated-app": {
+          "permissions": {
+            "contents": "write",
+            "pull_requests": "write",
+            "workflows": "write"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+if node "$root/scripts/check-devcontainer.mjs" "$tmp/overbroad-repo-access/.devcontainer/devcontainer.json" >"$tmp/overbroad-repo-access.out" 2>&1; then
+  cat "$tmp/overbroad-repo-access.out" >&2
+  echo "Overbroad repository-access fixture unexpectedly passed." >&2
+  exit 1
+fi
+assert_contains "$tmp/overbroad-repo-access.out" "Overbroad Codespaces repository permission"
+
 echo "Creating representative jobs..."
 CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" remotion https://www.npmjs.com/package/remotion >/dev/null
 CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" excalidraw https://github.com/excalidraw/excalidraw >/dev/null

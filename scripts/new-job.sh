@@ -105,6 +105,7 @@ Record each command, where it ran, and whether it passed.
 - Host networking:
 - Docker socket:
 - Host credential mounts:
+- Repository permissions:
 - Secrets committed:
 - Egress posture:
 

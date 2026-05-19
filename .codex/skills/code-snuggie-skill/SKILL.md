@@ -46,11 +46,17 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
 5. Add VS Code customizations:
    - Always include `OpenAI.chatgpt` in `customizations.vscode.extensions`.
    - Add stack-specific extensions only when they clearly improve first-open use, such as `dbaeumer.vscode-eslint`, `esbenp.prettier-vscode`, `ms-python.python`, `ms-python.vscode-pylance`, or `ms-python.black-formatter`.
-6. Handle secrets safely:
+6. Limit Codespaces repository access:
+   - Treat `customizations.codespaces.repositories` as a sensitive privilege boundary because repo startup code, lifecycle commands, package scripts, and extensions can run with the Codespaces token.
+   - Grant access only to exact destination repositories needed for the job. Do not use broad owner/org patterns or extra repositories for convenience.
+   - Default destination-repo permissions are only `contents: write` and `pull_requests: write`; omit everything else unless the user explicitly approves and the reason is recorded in `VALIDATION.md`.
+   - Do not grant `actions`, `workflows`, `administration`, `packages`, `secrets`, or other write scopes by default. If workflow-file changes are required, prefer documenting the limitation or asking for a narrowly scoped follow-up token/app instead of broadening the Codespaces token.
+   - Confirm generated devcontainers do not request expanded repository permissions unless the target project itself has a clear Codespaces need.
+7. Handle secrets safely:
    - Never write secret values into committed files.
    - If a variable is required, document it with `secrets` in `devcontainer.json` or with a committed `.env.example` only when the repo already uses that convention.
    - Use `remoteEnv` or `containerEnv` only for non-secret defaults.
-7. Validate before handoff:
+8. Validate before handoff:
    - Read `references/validation.md`.
    - Run `npm run check:devcontainer -- <workspace>/.devcontainer/devcontainer.json` from the workbench when available.
    - Use `npm test` for deterministic workbench fixtures.
@@ -58,9 +64,9 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Build and start the dev container when Docker/devcontainer tooling is available.
    - Run the repo's install, checks, and start smoke test inside the container.
    - If you change the image, lifecycle command, ports, or environment after a failed run, remove or recreate the existing devcontainer and rerun `devcontainer up`; cached containers can hide first-open failures.
-   - Update `VALIDATION.md` with every important command, its working directory, result, first failing command if any, and the security review of privileges, networking, mounts, secrets, and egress.
+   - Update `VALIDATION.md` with every important command, its working directory, result, first failing command if any, and the security review of privileges, networking, repository permissions, mounts, secrets, and egress.
    - Do not claim the setup is ready if the container builds but project dependencies, tests, or documented start commands fail. Report the exact blocker and remaining command.
-8. Publish only after validation passes:
+9. Publish only after validation passes:
    - Confirm no secrets are present.
    - Treat literal CI placeholders such as `${{ secrets.GITHUB_TOKEN }}` as secret references, not leaked values. Still reject real token-looking values and private keys.
    - Confirm generated `.devcontainer/` passes static checks.

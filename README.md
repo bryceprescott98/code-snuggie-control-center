@@ -6,7 +6,7 @@ Code Snuggie is a an agent that createx a reliable devcontainer setup for anothe
 
 1. Create an empty GitHub repository for the generated project, such as `my-org/my-generated-app`.
 
-2. In this repository, update [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) so Codespaces can write to that destination repository:
+2. In this repository, update [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) so Codespaces can write to that exact destination repository. Keep this least-privilege; the normal Code Snuggie workflow needs only `contents: write` and `pull_requests: write`.
 
    ```jsonc
    {
