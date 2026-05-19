@@ -15,10 +15,12 @@ Run this reference before handing off any Codespaces/devcontainer setup. A devco
 4. Confirm lifecycle commands are repo-aware:
    - `postCreateCommand` installs dependencies using the repo's package manager.
    - Commands do not require interactive input.
+   - Commands are finite: no dev servers, watchers, browser-open commands, prompts, or background jobs that keep the lifecycle spinner alive.
    - Commands do not write secrets.
    - Commands run as the non-root development user, not as `root`.
 5. Confirm no template placeholders remain, such as `<repo-install-command>` or generic copied names.
 6. Confirm ports match actual app commands and include useful `portsAttributes` labels.
+   - For web apps, verify ports against env files and framework config, not just framework defaults.
 7. Confirm networking does not include avoidable bypasses:
    - No `--network=host` or `network_mode: host`.
    - No `--privileged` or `privileged: true` unless explicitly required.
@@ -42,6 +44,8 @@ devcontainer read-configuration --workspace-folder .
 devcontainer build --workspace-folder .
 devcontainer up --workspace-folder .
 ```
+
+If a previous container exists and you changed `.devcontainer/`, remove or rebuild it before judging the result. `devcontainer up` can reuse an existing container and hide first-open lifecycle failures.
 
 Then run project checks inside the created container:
 
@@ -74,6 +78,7 @@ Common blockers to fix before handoff:
 - Package installs that prompt for input because `DEBIAN_FRONTEND=noninteractive` is missing.
 - Dockerfile assumes workspace files are available during image build when the devcontainer build context is `.devcontainer`.
 - Installing developer tools into root-owned locations, then running lifecycle commands as `vscode` without PATH or permission handling.
+- Deferring exact package-manager activation to `postCreateCommand` when Corepack or shims need root-owned global paths; move that activation into the Dockerfile.
 
 ## Docker Compose Validation
 
@@ -101,11 +106,14 @@ Check:
 Run the repo's own checks inside the dev container:
 
 - Dependency install or lockfile verification.
+- Confirm the dependency install command exits. A Codespaces UI stuck on `Running postCreateCommand` often means the lifecycle command is still running, waiting on a prompt, or running repo hooks; fix the command instead of telling users to ignore it.
 - Unit tests or the closest CI test command.
 - Typecheck/lint/build when configured.
 - A start smoke test for the documented app command.
 
 For web apps, verify the command binds to `0.0.0.0` and the forwarded port appears. A process listening only on `127.0.0.1` inside the container may not be reachable as expected from Codespaces.
+
+For dev servers that auto-open browsers, verify the smoke test does not crash due to missing `xdg-open` or similar opener tools. Prefer disabling auto-open with repo-supported environment/config over adding desktop opener packages.
 
 ## Handoff Rule
 

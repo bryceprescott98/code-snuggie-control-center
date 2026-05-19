@@ -9,7 +9,7 @@ Inspect these files before writing config:
 - Package manager: `package-lock.json` means npm, `pnpm-lock.yaml` means pnpm, `yarn.lock` means Yarn, `bun.lock` or `bun.lockb` means Bun. Check `packageManager` in `package.json`; it may require Corepack.
 - Runtime version: `.nvmrc`, `.node-version`, `.tool-versions`, `package.json` `engines.node`, CI setup, Dockerfile `FROM node:...`.
 - Monorepo shape: `workspaces`, `pnpm-workspace.yaml`, `turbo.json`, `nx.json`, `lerna.json`, multiple apps under `apps/` or `packages/`.
-- Frameworks and ports: Next.js `next` usually `3000`, Vite `5173`, Astro `4321`, Remix/React Router often `3000`, Express/Nest/Fastify commonly `3000` or configured in env, Storybook `6006`.
+- Frameworks and ports: Next.js `next` usually `3000`, Vite `5173`, Astro `4321`, Remix/React Router often `3000`, Express/Nest/Fastify commonly `3000` or configured in env, Storybook `6006`. Always check `.env*`, framework config, and scripts for port overrides such as `VITE_*_PORT`, `PORT`, `--port`, or config `server.port`.
 - Native/browser/media needs: `sharp`, `canvas`, `node-gyp`, `sqlite3`, `better-sqlite3`, `playwright`, `puppeteer`, Cypress, Prisma, database clients, `fluent-ffmpeg`, `ffmpeg`, video/audio processing scripts.
 - Service needs: Postgres, MySQL, Redis, Elasticsearch, localstack, queues, object storage; check compose files and env examples.
 
@@ -89,7 +89,7 @@ Add Playwright dependencies only when the repo uses Playwright. Run the project'
 "postCreateCommand": "npm ci && npx playwright install --with-deps"
 ```
 
-If the repo uses `corepack`, enable it explicitly:
+If the repo uses `corepack`, enable it explicitly. Prefer doing package-manager activation in the Dockerfile when activation writes to root-owned global paths or when first-open speed matters:
 
 ```jsonc
 "postCreateCommand": "corepack enable && pnpm install --frozen-lockfile"
@@ -101,6 +101,23 @@ If `package.json` has `packageManager`, activate that exact manager before insta
 "postCreateCommand": "corepack enable && corepack prepare pnpm@9.12.3 --activate && pnpm install --frozen-lockfile"
 ```
 
+Dockerfile activation pattern:
+
+```Dockerfile
+FROM mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm
+
+RUN corepack enable \
+    && corepack prepare yarn@1.22.22 --activate
+```
+
+For Yarn Classic projects that pin `packageManager: "yarn@1.x"` and have first-open Corepack delays or permission issues, install that exact Yarn version globally in the Dockerfile and keep `postCreateCommand` to dependency installation only:
+
+```Dockerfile
+RUN corepack enable \
+    && corepack prepare yarn@1.22.22 --activate \
+    && npm install --global yarn@1.22.22
+```
+
 ## Install Commands
 
 The container should be ready to start development when the user opens the codespace. Put the dependency install in `postCreateCommand` or an equivalent lifecycle command so the first open installs dependencies automatically. Do not leave dependency installation as a manual follow-up unless the install requires private credentials that are unavailable.
@@ -109,13 +126,15 @@ Choose exactly one primary install command:
 
 - npm with `package-lock.json`: `npm ci`
 - npm without lockfile: `npm install`
-- pnpm with lockfile: `corepack enable && corepack prepare <packageManager-version> --activate && pnpm install --frozen-lockfile` when `packageManager` is present, otherwise `corepack enable && pnpm install --frozen-lockfile`
+- pnpm with lockfile: `pnpm install --frozen-lockfile` when the exact pnpm version is activated in the image; otherwise `corepack enable && corepack prepare <packageManager-version> --activate && pnpm install --frozen-lockfile` when `packageManager` is present, or `corepack enable && pnpm install --frozen-lockfile`
 - pnpm without lockfile: `corepack enable && pnpm install`
-- Yarn Berry with `.yarnrc.yml` or `packageManager`: `corepack enable && corepack prepare <packageManager-version> --activate && yarn install --immutable` when `packageManager` is present, otherwise `corepack enable && yarn install --immutable`
-- Yarn Classic with `yarn.lock`: `yarn install --frozen-lockfile`
+- Yarn Berry with `.yarnrc.yml` or `packageManager`: `yarn install --immutable` when the exact Yarn version is activated in the image; otherwise `corepack enable && corepack prepare <packageManager-version> --activate && yarn install --immutable` when `packageManager` is present, or `corepack enable && yarn install --immutable`
+- Yarn Classic with `yarn.lock`: `yarn install --frozen-lockfile`; add `--non-interactive --network-timeout 600000` when Codespaces first-open feedback suggests the lifecycle is slow or appears stuck. If the repo's install runs Husky hooks and they are not needed in Codespaces, prefix with `HUSKY=0`, but do not use `--ignore-scripts` unless you verified native/build scripts are unnecessary.
 - Bun: use a Bun feature or Dockerfile install, then `bun install --frozen-lockfile` when a lockfile exists
 
 Do not run `npm install` in a pnpm or Yarn repo. Do not remove lockfiles or switch package managers. If install depends on private registry credentials, configure a Codespaces secret or documented secret prompt and make the failure mode explicit.
+
+Keep `postCreateCommand` finite. Avoid long-running dev servers, watchers, or browser-open behavior in lifecycle commands. If the documented dev server auto-opens a browser and the framework respects `BROWSER=none`, set it as a non-secret `containerEnv`.
 
 ## devcontainer.json Pattern
 
@@ -149,6 +168,8 @@ Include only ports that are likely to be used:
 ```
 
 For monorepos, run the install command from the package-manager workspace root: the directory that contains the shared lockfile and workspace config such as `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `pnpm-workspace.yaml`, or the root `package.json` `workspaces` field. This is about the repo directory, not the Linux `root` user. Add a `postAttachCommand` only when the repo has a clear default dev command and it is safe to run automatically; otherwise document the start command in final output. Dependencies must still be installed by `postCreateCommand`.
+
+For Vite apps, confirm the effective port from `server.port`, `VITE_*_PORT`, or `.env.development`; some repos use Vite but override away from the default `5173`. Forward that actual port and smoke-test it. If `server.open` is enabled, set `BROWSER=none` in `containerEnv` unless the repo has another documented way to disable browser launch.
 
 ## Services
 
@@ -190,5 +211,6 @@ After `devcontainer up`, run checks inside the container with `devcontainer exec
 - Test: prefer `npm test`, `pnpm test`, or `yarn test`; add CI flags only if the repo already uses them.
 - Build: prefer `npm run build`, `pnpm build`, or `yarn build` if present.
 - Start smoke: run the documented dev command long enough to verify it binds the forwarded port. Stop it afterward.
+- If the first smoke hits the wrong port, inspect the server log and env-derived port before changing the app. Update `forwardPorts` to match the repo's configured dev port.
 
 If a check is absent, do not invent it. Use the scripts and CI config the repo already has.

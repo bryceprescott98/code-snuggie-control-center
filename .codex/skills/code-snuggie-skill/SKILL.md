@@ -26,7 +26,7 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Manifests and lockfiles: `package.json`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `pyproject.toml`, `requirements*.txt`, `uv.lock`, `poetry.lock`, `Pipfile.lock`, `environment.yml`.
    - Version hints: `.nvmrc`, `.node-version`, `engines.node`, `.python-version`, `runtime.txt`, `requires-python`.
    - Entrypoints and checks: README setup steps, scripts, Makefile targets, CI workflows, Dockerfiles, Compose files, test config, lint/typecheck config.
-   - Runtime needs: ports, databases, Redis, queues, browsers, native packages, OS libraries, private registries, required environment variables.
+   - Runtime needs: ports, databases, Redis, queues, browsers, native packages, OS libraries, private registries, required environment variables. For web apps, inspect env files and framework config for the actual dev port; do not rely on framework defaults alone.
 3. Select the simplest reproducible shape:
    - Use `.devcontainer/devcontainer.json` as the default location.
    - Use an official `mcr.microsoft.com/devcontainers/...` image when it already covers the runtime.
@@ -41,6 +41,8 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Keep the interactive development user non-root, normally the devcontainer image's `vscode` user. Do not set `remoteUser`, Compose `user`, or app/lifecycle commands to `root` unless the repo has a documented requirement and the risk is explained.
    - Use the runtime version implied by repo files; if no version is discoverable, choose the current stable official devcontainer image and note the assumption.
    - Do not replace existing Docker/Compose semantics unless they are clearly unsuitable for development.
+   - Keep lifecycle commands non-interactive and finite. If a package-manager shim or tool activation needs root-owned global paths, do that in the image build instead of in `postCreateCommand`.
+   - For browser-starting dev servers, disable automatic browser launch with a non-secret environment default when the repo supports it, such as `BROWSER=none`, rather than installing desktop opener tools just to satisfy `open`.
 5. Add VS Code customizations:
    - Always include `OpenAI.chatgpt` in `customizations.vscode.extensions`.
    - Add stack-specific extensions only when they clearly improve first-open use, such as `dbaeumer.vscode-eslint`, `esbenp.prettier-vscode`, `ms-python.python`, `ms-python.vscode-pylance`, or `ms-python.black-formatter`.
@@ -55,14 +57,18 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Use `npm run test:live -- [remotion|excalidraw|all]` only when real network/package/GitHub validation is intended.
    - Build and start the dev container when Docker/devcontainer tooling is available.
    - Run the repo's install, checks, and start smoke test inside the container.
+   - If you change the image, lifecycle command, ports, or environment after a failed run, remove or recreate the existing devcontainer and rerun `devcontainer up`; cached containers can hide first-open failures.
    - Update `VALIDATION.md` with every important command, its working directory, result, first failing command if any, and the security review of privileges, networking, mounts, secrets, and egress.
    - Do not claim the setup is ready if the container builds but project dependencies, tests, or documented start commands fail. Report the exact blocker and remaining command.
 8. Publish only after validation passes:
    - Confirm no secrets are present.
+   - Treat literal CI placeholders such as `${{ secrets.GITHUB_TOKEN }}` as secret references, not leaked values. Still reject real token-looking values and private keys.
    - Confirm generated `.devcontainer/` passes static checks.
    - Push only the generated project workspace, not job metadata.
    - Do not run `git config` or override the commit author. Use the current git identity or standard `GIT_AUTHOR_*` / `GIT_COMMITTER_*` environment variables.
    - Publish by pull request. If the target repository is empty, seed its base branch with an empty commit before committing the generated workspace so the PR branch shares history with the base branch and no rebase is needed.
+   - If the available GitHub token cannot push `.github/workflows/*`, either omit workflow files from the generated PR branch and document that limitation, or stop and ask for a token/app with workflows permission when preserving workflows is required.
+   - After a PR exists, prefer normal follow-up commits for fixes so updates are visible in the PR history. Use force-push only when intentionally replacing generated history, and say so explicitly.
    - In the workbench, use `npm run job:publish -- <job-name> <repo-name-or-owner/repo> [description]` when ambient `gh` auth is available.
 
 ## Approval Posture
