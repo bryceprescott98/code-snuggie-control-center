@@ -31,6 +31,7 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Use `.devcontainer/devcontainer.json` as the default location.
    - Use an official `mcr.microsoft.com/devcontainers/...` image when it already covers the runtime.
    - Check the official Dev Container Features catalog when adding portable tools such as GitHub CLI, Node, Python, Docker-in-Docker, or common CLIs: https://containers.dev/features
+   - Before adding or keeping a Dev Container Feature version, confirm the latest available major version from the official catalog or the feature's source `devcontainer-feature.json`, and use that latest major unless the repo has a specific compatibility reason to stay older. Record any intentional older pin in `VALIDATION.md`.
    - Check the official Dev Container Templates catalog when a repo closely matches a standard stack, but adapt the result to the repo instead of copying a generic template wholesale: https://containers.dev/templates
    - Add `.devcontainer/Dockerfile` only for apt packages, browser/system libraries, native build dependencies, or tools that should be cached in the image.
    - Use Docker Compose when the repo already depends on app-adjacent services or has a working compose setup. Keep the development service alive with a sleep loop if its normal command exits.
@@ -89,7 +90,7 @@ Ask before boundary crossings: writing outside this workspace or job folders, de
 - Read `references/python.md` for Python apps, packages, notebooks, APIs, or data projects.
 - Read `references/networking.md` when the setup needs Codespaces port behavior, Docker Compose service networking, or AI-agent-safe outbound network controls.
 - Read `references/validation.md` for every task before final handoff.
-- Use https://containers.dev/features to find current feature IDs and versions when a feature is better than a custom Dockerfile install.
+- Use https://containers.dev/features to find current feature IDs and versions when a feature is better than a custom Dockerfile install. Prefer the latest available feature major version unless there is a specific compatibility reason to pin older, and document that reason in `VALIDATION.md`.
 - Use https://containers.dev/templates to find official/community templates for comparison, then keep only the parts that fit the target repo.
 
 ## Output Expectations
