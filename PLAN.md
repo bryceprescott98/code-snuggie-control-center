@@ -24,7 +24,7 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - Security: remove or justify privileged mode, host networking, Docker socket mounts, host credential mounts, root interactive users, broad ports, secrets, and unsafe egress.
   - Efficiency: remove stale template code, unnecessary image builds, oversized apt installs, duplicate setup, and slow lifecycle commands.
   - Reliability: align installs with lockfiles, add required system packages, configure ports/services, and ensure first-open setup works.
-  - Agent readiness: include `OpenAI.chatgpt`, useful VS Code extensions, GitHub CLI when appropriate, and restricted egress by default.
+  - Agent readiness: include `OpenAI.chatgpt`, useful VS Code extensions, GitHub CLI when appropriate, and document the egress posture. Restricted egress remains an explicit V1 decision below.
 - If no devcontainer exists, Codex creates the smallest reliable setup based on repo evidence.
 
 ## Job Workflow
@@ -43,7 +43,7 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - [x] Required tools exist: `gh`, `git`, `node`, `npm`, `python`, `docker`, and `devcontainer`.
   - [x] Codex can create job folders and validate devcontainers.
   - [x] Codex has helper commands for cloning GitHub repos and publishing generated workspaces.
-  - [ ] Codex can live-clone repos, install dependencies, and push generated repos without repeated routine permission prompts.
+  - [x] Codex can live-clone repos, install dependencies, and push generated repos without repeated routine permission prompts.
 - Remotion:
   - Given `https://www.npmjs.com/package/remotion`, Codex creates a repo equivalent to `npx create-video@latest`.
   - The repo has devcontainer support, installs dependencies, runs available checks/builds, starts the Remotion dev workflow, and is pushed privately after validation.
@@ -52,7 +52,7 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - The setup respects Excalidraw's current Yarn 1.22.22 workflow.
   - Validation includes install, practical configured checks/builds, and a dev-server smoke check.
 - Security:
-  - Generated devcontainers default to restricted egress.
+  - [ ] Decide whether generated devcontainers should default to restricted egress. Current V1 rejects unsafe networking and documents egress posture, but Remotion and Excalidraw use normal outbound package/development network access.
   - Unsafe privileges are removed or justified in `VALIDATION.md`.
   - No secrets are committed.
 
@@ -113,6 +113,17 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - Removed agent-facing npm command lists and validation instructions from README.
   - README now only tells humans to create a destination repo, grant Codespaces access in `.devcontainer/devcontainer.json`, open a new codespace, and ask Codex to generate from a repo URL or npm package.
   - The `code-snuggie` skill now explicitly says npm commands are for Codex to run, not instructions to hand back to the human.
+- 2026-05-19: Built, validated, published, and tested the Excalidraw example:
+  - Cloned `https://github.com/excalidraw/excalidraw` into `.code-snuggie/jobs/excalidraw/workspace`.
+  - Added `.devcontainer/devcontainer.json` and `.devcontainer/Dockerfile` using Node 20, Yarn 1.22.22, GitHub CLI, `OpenAI.chatgpt`, ESLint, Prettier, and port forwarding for Excalidraw's configured Vite port 3001.
+  - Moved Yarn activation into the image and installed Yarn globally to avoid first-open Corepack/lifecycle friction.
+  - Set `BROWSER=none` and made post-create install non-interactive with `HUSKY=0 yarn install --frozen-lockfile --non-interactive --network-timeout 600000`.
+  - Validated static devcontainer checks, Dockerfile build, fresh `devcontainer up`, dependency install, typecheck, Vitest app suite, production build, and Vite smoke.
+  - Published PR #1: https://github.com/Square-Zero-Labs/code-snuggie-excalidraw/pull/1.
+  - Omitted upstream `.github/workflows/*` from the PR branch because the available GitHub App token lacks workflows permission.
+- 2026-05-19: Folded Excalidraw/Remotion live learnings back into the `code-snuggie` skill:
+  - Added guidance for detecting effective ports from env/config instead of framework defaults.
+  - Added guidance for image-level package-manager activation, finite non-interactive lifecycle commands, browser auto-open suppression, fresh-container validation after config changes, workflow permission limitations, and visible follow-up commits on PRs.
 
 ## Assumptions
 
