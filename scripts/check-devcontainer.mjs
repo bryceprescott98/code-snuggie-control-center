@@ -58,6 +58,66 @@ function requireText(text, needle, context) {
   }
 }
 
+function stripComments(text) {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/#.*/, ""))
+    .join("\n");
+}
+
+function parseSquidAcls(text) {
+  const acls = new Map();
+  const lines = stripComments(text).split(/\r?\n/);
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    const match = line.match(/^acl\s+(\S+)\s+dstdomain\s*(.*)$/);
+    if (!match) continue;
+
+    const [, name, firstRest] = match;
+    const domains = [];
+    let rest = firstRest.trim();
+
+    while (true) {
+      const continued = rest.endsWith("\\");
+      const fragment = continued ? rest.slice(0, -1).trim() : rest;
+      domains.push(...fragment.split(/\s+/).filter(Boolean));
+      if (!continued) break;
+      index += 1;
+      rest = (lines[index] ?? "").trim();
+    }
+
+    acls.set(name, domains);
+  }
+
+  return acls;
+}
+
+function domainConflictsWithinAcl(domains) {
+  const conflicts = [];
+  const normalized = domains.map((domain) => domain.toLowerCase());
+
+  for (let leftIndex = 0; leftIndex < normalized.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < normalized.length; rightIndex += 1) {
+      const left = normalized[leftIndex];
+      const right = normalized[rightIndex];
+      const leftBase = left.startsWith(".") ? left.slice(1) : left;
+      const rightBase = right.startsWith(".") ? right.slice(1) : right;
+      const hasWildcardParent = left.startsWith(".") || right.startsWith(".");
+
+      if (hasWildcardParent && (
+        leftBase === rightBase ||
+        leftBase.endsWith(`.${rightBase}`) ||
+        rightBase.endsWith(`.${leftBase}`)
+      )) {
+        conflicts.push(`${domains[leftIndex]} <-> ${domains[rightIndex]}`);
+      }
+    }
+  }
+
+  return conflicts;
+}
+
 function composeServiceBlock(text, serviceName) {
   const lines = text.split(/\r?\n/);
   const servicePattern = new RegExp(`^(\\s*)${serviceName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:\\s*$`);
@@ -166,6 +226,15 @@ if (Array.isArray(config.forwardPorts)) {
   }
 }
 
+const portAttributes = config.portsAttributes;
+if (portAttributes && typeof portAttributes === "object" && !Array.isArray(portAttributes)) {
+  for (const [port, attributes] of Object.entries(portAttributes)) {
+    if (attributes?.onAutoForward === "openBrowser") {
+      warnings.push(`Port ${port} auto-opens a browser; prefer onAutoForward: "notify" unless the user explicitly requested automatic launch.`);
+    }
+  }
+}
+
 if (requireRestrictedEgress) {
   const composeFiles = asArray(config.dockerComposeFile);
   if (composeFiles.length === 0 || !config.service) {
@@ -204,6 +273,9 @@ if (requireRestrictedEgress) {
   } else {
     requireText(proxyServiceBlock, "devnet", "Restricted egress proxy service");
     requireText(proxyServiceBlock, "outbound", "Restricted egress proxy service");
+    requireText(proxyServiceBlock, "squid", "Restricted egress proxy service");
+    requireText(proxyServiceBlock, "-N", "Restricted egress proxy service");
+    requireText(proxyServiceBlock, "/etc/squid/squid.conf", "Restricted egress proxy service");
   }
 
   if (!/image:\s*ubuntu\/squid:[^\s#]+/.test(composeText)) {
@@ -220,11 +292,20 @@ if (requireRestrictedEgress) {
   } else {
     const squidText = readText(squidPath);
     requireText(squidText, "acl allowed_domains dstdomain", "Squid allowlist");
+    requireText(squidText, "http_port 3128", "Squid allowlist");
     requireText(squidText, "http_access allow allowed_domains", "Squid allowlist");
     requireText(squidText, "http_access deny all", "Squid allowlist");
 
     for (const domain of requiredSquidDomains) {
       requireText(squidText, domain, "Squid allowlist");
+    }
+
+    const squidAcls = parseSquidAcls(squidText);
+    for (const [name, domains] of squidAcls.entries()) {
+      const conflicts = domainConflictsWithinAcl(domains);
+      if (conflicts.length > 0) {
+        fail(`Squid ACL ${name} has parent/subdomain conflicts: ${conflicts.join(", ")}`);
+      }
     }
   }
 }

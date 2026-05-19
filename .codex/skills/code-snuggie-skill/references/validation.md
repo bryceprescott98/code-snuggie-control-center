@@ -21,6 +21,8 @@ Run this reference before handing off any Codespaces/devcontainer setup. A devco
 5. Confirm no template placeholders remain, such as `<repo-install-command>` or generic copied names.
 6. Confirm ports match actual app commands and include useful `portsAttributes` labels.
    - For web apps, verify ports against env files and framework config, not just framework defaults.
+   - Prefer `onAutoForward: "notify"` unless the user asks for automatic browser launch.
+   - Confirm the documented start command itself binds to the forwarded port. Do not validate with extra CLI flags unless those flags are committed into the script or README.
 7. Confirm networking does not include avoidable bypasses:
    - No `--network=host` or `network_mode: host`.
    - No `--privileged` or `privileged: true` unless explicitly required.
@@ -28,6 +30,7 @@ Run this reference before handing off any Codespaces/devcontainer setup. A devco
    - No host SSH keys, cloud credentials, or production secrets mounted into the container.
    - No broad host port ranges published when `forwardPorts` is sufficient.
    - Generated AI-agent-facing Codespaces use the Squid egress proxy template, an internal app network, a pinned `ubuntu/squid` image tag, and a checked allowlist unless unrestricted egress is explicitly approved and documented.
+   - Squid sidecars run in the foreground with `squid -N -f /etc/squid/squid.conf`, include `http_port 3128`, and avoid parent/subdomain duplicates within the same `dstdomain` ACL.
 8. Confirm secrets are not committed:
    - No real tokens, passwords, cloud keys, or private registry credentials.
    - Required secret names appear in `secrets` or documentation only.
@@ -109,6 +112,7 @@ Check:
 - Required dependent services have local development defaults.
 - `shutdownAction` is usually `stopCompose`.
 - Restricted egress setups use an internal app network plus a proxy/firewall sidecar, and the allowlist is repo-specific.
+- The proxy sidecar stays running by itself before app dependency installation starts.
 - When restricted egress is required, `npm run check:devcontainer -- --require-restricted-egress <workspace>/.devcontainer/devcontainer.json` passes before the repo is published.
 
 ## In-Container Project Validation
@@ -122,6 +126,8 @@ Run the repo's own checks inside the dev container:
 - A start smoke test for the documented app command.
 
 For web apps, verify the command binds to `0.0.0.0` and the forwarded port appears. A process listening only on `127.0.0.1` inside the container may not be reachable as expected from Codespaces.
+
+Validate the exact documented start command, stop it after the smoke test, and confirm no previous validation process is occupying the same port. If the tool falls back to another port, record the actual printed port and update `forwardPorts` only when that fallback is expected for users.
 
 For dev servers that auto-open browsers, verify the smoke test does not crash due to missing `xdg-open` or similar opener tools. Prefer disabling auto-open with repo-supported environment/config over adding desktop opener packages.
 

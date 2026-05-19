@@ -8,6 +8,9 @@ Use this reference when configuring forwarded ports, Docker Compose services, or
 - Make web servers bind to `0.0.0.0` inside the container when they must be reachable through forwarded ports.
 - Forward the app's container port, not a random host port.
 - Label forwarded ports so Codespaces and VS Code show useful names.
+- Use `onAutoForward: "notify"` by default. Automatic browser launch is noisy for VS Code Desktop users and can mislead when an app falls back from one port to another.
+- During smoke tests, stop any previous dev server before starting a new one. A stray listener can make the wrong port look healthy.
+- Some tools fall back to a nearby port when the preferred port is occupied. Record the actual port printed by the dev server and forward fallback ports only when the tool commonly uses them or validation proves they are needed.
 
 ## Compose Service Networking
 
@@ -54,6 +57,7 @@ services:
 
   egress-proxy:
     image: ubuntu/squid:6.6-24.04_beta
+    command: ["squid", "-N", "-f", "/etc/squid/squid.conf"]
     volumes:
       - ./squid.conf:/etc/squid/squid.conf:ro
     networks:
@@ -65,6 +69,22 @@ networks:
     internal: true
   outbound: {}
 ```
+
+The Squid config must include `http_port 3128`. Run Squid in the foreground with `-N`; otherwise some images daemonize and the sidecar container exits even though the config parses.
+
+Squid rejects parent/subdomain duplicates in the same `dstdomain` ACL. Do not put entries such as `auth.openai.com` and `.auth.openai.com` together in one ACL. If static validation or documentation needs both, split them into separate ACL groups and allow both groups with separate `http_access allow` lines.
+
+Before running a full `devcontainer up`, a fast proxy smoke test catches most misleading install failures:
+
+```bash
+docker compose -f .devcontainer/docker-compose.yml up -d egress-proxy
+docker compose -f .devcontainer/docker-compose.yml ps
+docker compose -f .devcontainer/docker-compose.yml up -d dev
+docker compose -f .devcontainer/docker-compose.yml exec dev \
+  curl -I https://registry.npmjs.org/npm
+```
+
+If npm later reports `EAI_AGAIN` or `Exit handler never called`, check whether the proxy sidecar is still running before treating it as a package-manager bug.
 
 ## Setup vs Agent Runtime
 

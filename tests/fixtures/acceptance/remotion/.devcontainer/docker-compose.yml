@@ -20,6 +20,7 @@ services:
 
   egress-proxy:
     image: ubuntu/squid:6.6-24.04_beta
+    command: ["squid", "-N", "-f", "/etc/squid/squid.conf"]
     volumes:
       - ./squid.conf:/etc/squid/squid.conf:ro
     networks:

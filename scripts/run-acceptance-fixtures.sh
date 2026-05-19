@@ -86,6 +86,34 @@ if node "$root/scripts/check-devcontainer.mjs" --require-restricted-egress "$tmp
 fi
 assert_contains "$tmp/missing-egress.out" "Restricted egress requires dockerComposeFile plus service"
 
+mkdir -p "$tmp/bad-squid/.devcontainer"
+cp -R "$root/tests/fixtures/acceptance/remotion/.devcontainer/." "$tmp/bad-squid/.devcontainer/"
+perl -0pi -e 's/\n    command: \["squid", "-N", "-f", "\/etc\/squid\/squid.conf"\]//' "$tmp/bad-squid/.devcontainer/docker-compose.yml"
+if node "$root/scripts/check-devcontainer.mjs" --require-restricted-egress "$tmp/bad-squid/.devcontainer/devcontainer.json" >"$tmp/bad-squid-command.out" 2>&1; then
+  cat "$tmp/bad-squid-command.out" >&2
+  echo "Missing Squid foreground command fixture unexpectedly passed." >&2
+  exit 1
+fi
+assert_contains "$tmp/bad-squid-command.out" "Restricted egress proxy service must include -N"
+
+cp -R "$root/tests/fixtures/acceptance/remotion/.devcontainer/." "$tmp/bad-squid/.devcontainer/"
+perl -0pi -e 's/http_port 3128\n\n//' "$tmp/bad-squid/.devcontainer/squid.conf"
+if node "$root/scripts/check-devcontainer.mjs" --require-restricted-egress "$tmp/bad-squid/.devcontainer/devcontainer.json" >"$tmp/bad-squid-port.out" 2>&1; then
+  cat "$tmp/bad-squid-port.out" >&2
+  echo "Missing Squid http_port fixture unexpectedly passed." >&2
+  exit 1
+fi
+assert_contains "$tmp/bad-squid-port.out" "Squid allowlist must include http_port 3128"
+
+cp -R "$root/tests/fixtures/acceptance/remotion/.devcontainer/." "$tmp/bad-squid/.devcontainer/"
+perl -0pi -e 's/auth.openai.com \\/auth.openai.com \\\n  .auth.openai.com \\/' "$tmp/bad-squid/.devcontainer/squid.conf"
+if node "$root/scripts/check-devcontainer.mjs" --require-restricted-egress "$tmp/bad-squid/.devcontainer/devcontainer.json" >"$tmp/bad-squid-conflict.out" 2>&1; then
+  cat "$tmp/bad-squid-conflict.out" >&2
+  echo "Squid parent/subdomain conflict fixture unexpectedly passed." >&2
+  exit 1
+fi
+assert_contains "$tmp/bad-squid-conflict.out" "parent/subdomain conflicts"
+
 echo "Creating representative jobs..."
 CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" remotion https://www.npmjs.com/package/remotion >/dev/null
 CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" excalidraw https://github.com/excalidraw/excalidraw >/dev/null
