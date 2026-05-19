@@ -11,11 +11,16 @@ Create a dev container setup that works before handoff. Prefer a small, boring c
 
 ## Workflow
 
+The npm commands below are for Codex to run from the workbench. Do not ask the human to run them during a normal Code Snuggie job; the human should only provide the source repo or npm package and the destination GitHub repository.
+
 1. Create or use a job workspace when operating from the Code Snuggie workbench:
    - Start with `npm run job:new -- <job-name> <github-url|npm-package-or-url>`.
+   - Use `npm run job:path -- <job-name>` whenever there is any doubt about where a job lives.
    - For GitHub sources, clone with `npm run job:clone -- <job-name> <github-url> [ref]`.
    - For npm starter sources, generate with `npm run job:npm-harness -- <job-name> <package-or-url> [create-command...]`.
-   - Work inside `.code-snuggie/jobs/<job-name>/workspace/`.
+   - The canonical job root is `.code-snuggie/jobs/<job-name>/`.
+   - The cloned or generated project is always in `.code-snuggie/jobs/<job-name>/workspace/`. Do not look for generated project files at the repository root or directly under `.code-snuggie/jobs/`.
+   - `npm run test:live` also defaults to `.code-snuggie/jobs/`; only use another location when `CODE_SNUGGIE_LIVE_JOBS_DIR` or `CODE_SNUGGIE_JOBS_DIR` is explicitly set.
    - Keep `JOB.md`, `LOG.md`, and `VALIDATION.md` current as work proceeds.
 2. Inspect the repo before choosing a container shape:
    - Manifests and lockfiles: `package.json`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `pyproject.toml`, `requirements*.txt`, `uv.lock`, `poetry.lock`, `Pipfile.lock`, `environment.yml`.
@@ -56,11 +61,13 @@ Create a dev container setup that works before handoff. Prefer a small, boring c
    - Confirm no secrets are present.
    - Confirm generated `.devcontainer/` passes static checks.
    - Push only the generated project workspace, not job metadata.
+   - Do not run `git config` or override the commit author. Use the current git identity or standard `GIT_AUTHOR_*` / `GIT_COMMITTER_*` environment variables.
+   - Publish by pull request. If the target repository is empty, seed its base branch with an empty commit before committing the generated workspace so the PR branch shares history with the base branch and no rebase is needed.
    - In the workbench, use `npm run job:publish -- <job-name> <repo-name-or-owner/repo> [description]` when ambient `gh` auth is available.
 
 ## Approval Posture
 
-Routine workbench actions are expected inside this repository and `.code-snuggie/jobs/`: creating/updating job folders, cloning GitHub repositories into job workspaces, installing dependencies, running builds/tests/lints/dev-server smoke checks, running Dev Container validation, and creating private GitHub repositories with ambient `gh` auth.
+Routine workbench actions are expected inside this repository and `.code-snuggie/jobs/`: creating/updating job folders, cloning GitHub repositories into job workspaces, installing dependencies, running builds/tests/lints/dev-server smoke checks, running Dev Container validation, and creating private GitHub repositories or pull requests with ambient `gh` auth.
 
 Ask before boundary crossings: writing outside this workspace or job folders, destructive host operations, reading undeclared secrets, expanding network or egress assumptions, or adding privileged containers, host networking, host Docker socket mounts, or broad host credential mounts.
 

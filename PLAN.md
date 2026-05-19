@@ -30,7 +30,7 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
 ## Job Workflow
 
 - [x] Codex creates `.code-snuggie/jobs/<job-name>/` with `JOB.md`, `SOURCE.json`, `LOG.md`, `VALIDATION.md`, `workspace/`, and optional `artifacts/`.
-- Codex clones GitHub repos or creates npm package harnesses, then works only inside the job workspace.
+- Codex clones GitHub repos or creates npm package harnesses, then works only inside `.code-snuggie/jobs/<job-name>/workspace/`.
 - Codex validates locally before publishing.
 - After validation passes, Codex creates a new private GitHub repo and pushes the generated project.
 - Failed jobs keep logs, exact failing commands, likely fixes, and whether the blocker is config, source project, auth, network, or tooling.
@@ -93,6 +93,26 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - `npm install`, `npm run lint`, `npm run build`, `npm audit --audit-level=high`, devcontainer build/up, in-container lint/build, and Remotion Studio smoke check passed.
   - Prepared commit `168d123` in `/tmp/code-snuggie-remotion-publish.Cvhu85` using configured Git identity.
   - Push to `Square-Zero-Labs/code-snuggie-remotion` is blocked by GitHub authorization: `403 Write access to repository not granted`.
+- 2026-05-18: Retested Remotion publishing after GitHub authorization was fixed:
+  - Confirmed `gh` is authenticated as `Square-Zero-Labs` with `ADMIN` access to `Square-Zero-Labs/code-snuggie-remotion`.
+  - Regenerated the Remotion starter in `.code-snuggie/jobs/code-snuggie-remotion/workspace` with `npx create-video@latest --yes --blank --no-tailwind .`.
+  - Added `.devcontainer/devcontainer.json`, generated `.devcontainer/devcontainer-lock.json`, configured Remotion Studio for Codespaces port forwarding, and ignored generated `build/` output.
+  - `npm install`, `npm run lint`, `npm run build`, `npm audit --audit-level=high`, devcontainer build/up, in-container lint/build, and Remotion Studio smoke checks passed.
+  - Seeded `main` in `Square-Zero-Labs/code-snuggie-remotion`, pushed `code-snuggie/remotion-codespace`, and opened PR #1: https://github.com/Square-Zero-Labs/code-snuggie-remotion/pull/1.
+- 2026-05-19: Streamlined the publish path based on the Remotion PR test:
+  - `scripts/publish-private-repo.sh` now publishes by pull request, uses the ambient git identity without `git config` or author overrides, accepts standard `GIT_AUTHOR_*` / `GIT_COMMITTER_*` identity environment variables, and records the PR URL.
+  - Empty target repositories are seeded with an empty `main` commit before the generated workspace commit, so the PR branch shares history with the base branch and does not require a rebase.
+  - Added an acceptance fixture with a fake `gh` and local bare repository to verify PR creation, base seeding, and shared branch history without network access.
+  - Updated README and the `code-snuggie` skill with the new publishing contract.
+  - `npm test` passed.
+- 2026-05-19: Clarified canonical job workspace paths:
+  - Added `npm run job:path -- <job-name>` to print the exact job root, workspace, and artifacts paths.
+  - Updated the `code-snuggie` skill and README to emphasize `.code-snuggie/jobs/<job-name>/workspace/` as the project workspace.
+  - Changed live acceptance's default job directory from `.code-snuggie/jobs-live` to `.code-snuggie/jobs` so normal and live runs use the same default tree unless explicitly overridden.
+- 2026-05-19: Simplified README for humans:
+  - Removed agent-facing npm command lists and validation instructions from README.
+  - README now only tells humans to create a destination repo, grant Codespaces access in `.devcontainer/devcontainer.json`, open a new codespace, and ask Codex to generate from a repo URL or npm package.
+  - The `code-snuggie` skill now explicitly says npm commands are for Codex to run, not instructions to hand back to the human.
 
 ## Assumptions
 

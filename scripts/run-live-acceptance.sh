@@ -6,7 +6,7 @@ usage() {
 Usage: npm run test:live -- [remotion|excalidraw|all]
 
 Environment:
-  CODE_SNUGGIE_LIVE_JOBS_DIR    Job output directory. Defaults to .code-snuggie/jobs-live.
+  CODE_SNUGGIE_LIVE_JOBS_DIR    Job output directory. Defaults to .code-snuggie/jobs.
   CODE_SNUGGIE_LIVE_PUBLISH     Set to an owner/repo or repo name to publish the Remotion job.
   CODE_SNUGGIE_LIVE_EXCALIDRAW_INSTALL=1
                                 Also run Excalidraw dependency install after clone.
@@ -23,7 +23,7 @@ case "$mode" in
 esac
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-jobs_dir="${CODE_SNUGGIE_LIVE_JOBS_DIR:-.code-snuggie/jobs-live}"
+jobs_dir="${CODE_SNUGGIE_LIVE_JOBS_DIR:-.code-snuggie/jobs}"
 mkdir -p "$jobs_dir"
 
 timestamp() {

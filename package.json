@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "job:new": "bash scripts/new-job.sh",
+    "job:path": "bash scripts/job-path.sh",
     "job:clone": "bash scripts/clone-github-source.sh",
     "job:npm-harness": "bash scripts/create-npm-harness.sh",
     "job:publish": "bash scripts/publish-private-repo.sh",
