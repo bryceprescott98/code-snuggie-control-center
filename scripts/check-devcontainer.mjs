@@ -1,11 +1,16 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const input = process.argv[2] ?? ".devcontainer/devcontainer.json";
+const args = process.argv.slice(2);
+const requireRestrictedEgress =
+  args.includes("--require-restricted-egress") ||
+  process.env.CODE_SNUGGIE_REQUIRE_RESTRICTED_EGRESS === "1";
+const input = args.find((arg) => !arg.startsWith("--")) ?? ".devcontainer/devcontainer.json";
 const path = input.startsWith("/") ? input : join(root, input);
+const devcontainerDir = dirname(path);
 
 function fail(message) {
   console.error(message);
@@ -32,11 +37,76 @@ function collectStrings(value, output = []) {
   return output;
 }
 
+function asArray(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") return [value];
+  return [];
+}
+
+function readText(file) {
+  try {
+    return readFileSync(file, "utf8");
+  } catch (error) {
+    fail(`Unable to read ${file}: ${error.message}`);
+    return "";
+  }
+}
+
+function requireText(text, needle, context) {
+  if (!text.includes(needle)) {
+    fail(`${context} must include ${needle}`);
+  }
+}
+
+function composeServiceBlock(text, serviceName) {
+  const lines = text.split(/\r?\n/);
+  const servicePattern = new RegExp(`^(\\s*)${serviceName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:\\s*$`);
+  let start = -1;
+  let indent = 0;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const match = lines[index].match(servicePattern);
+    if (match) {
+      start = index;
+      indent = match[1].length;
+      break;
+    }
+  }
+
+  if (start === -1) return "";
+
+  const block = [lines[start]];
+  for (let index = start + 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    const trimmed = line.trim();
+    if (trimmed && line.search(/\S/) <= indent) break;
+    block.push(line);
+  }
+  return block.join("\n");
+}
+
 const config = readJson(path);
 const extensions = config.customizations?.vscode?.extensions ?? [];
 const strings = collectStrings(config);
 const warnings = [];
 const allowedCodespacesWritePermissions = new Set(["contents", "pull_requests"]);
+const requiredSquidDomains = [
+  "github.com",
+  "api.github.com",
+  ".githubusercontent.com",
+  "registry.npmjs.org",
+  "pypi.org",
+  "files.pythonhosted.org",
+  "marketplace.visualstudio.com",
+  "update.code.visualstudio.com",
+  "api.openai.com",
+  "chatgpt.com",
+  ".chatgpt.com",
+  "auth.openai.com",
+  ".auth.openai.com",
+  ".openai.com",
+  ".oaiusercontent.com",
+];
 
 if (!extensions.includes("OpenAI.chatgpt")) {
   fail("Missing required VS Code extension: OpenAI.chatgpt");
@@ -52,6 +122,10 @@ if (config.privileged === true) {
 
 if (config.networkMode === "host" || strings.some((value) => value.includes("--network=host"))) {
   fail("Devcontainer uses host networking.");
+}
+
+if (strings.some((value) => /ubuntu\/squid:(latest|edge)\b/.test(value))) {
+  fail("Squid proxy image must use a pinned version tag, not latest or edge.");
 }
 
 const mountText = strings.join("\n");
@@ -88,6 +162,69 @@ if (Array.isArray(config.forwardPorts)) {
   for (const port of config.forwardPorts) {
     if (port === "0.0.0.0" || port === "*" || port === "1-65535") {
       fail(`Overbroad forwarded port entry: ${port}`);
+    }
+  }
+}
+
+if (requireRestrictedEgress) {
+  const composeFiles = asArray(config.dockerComposeFile);
+  if (composeFiles.length === 0 || !config.service) {
+    fail("Restricted egress requires dockerComposeFile plus service in devcontainer.json.");
+  }
+
+  const composeTexts = composeFiles.map((composeFile) => {
+    const composePath = composeFile.startsWith("/") ? composeFile : join(devcontainerDir, composeFile);
+    if (!existsSync(composePath)) {
+      fail(`Restricted egress compose file is missing: ${composePath}`);
+      return "";
+    }
+    return readText(composePath);
+  });
+  const composeText = composeTexts.join("\n");
+  const devServiceBlock = composeServiceBlock(composeText, config.service);
+  const proxyServiceBlock = composeServiceBlock(composeText, "egress-proxy");
+
+  requireText(composeText, "egress-proxy:", "Restricted egress compose file");
+  requireText(composeText, "internal: true", "Restricted egress compose file");
+  requireText(composeText, "/etc/squid/squid.conf:ro", "Restricted egress compose file");
+
+  if (!devServiceBlock) {
+    fail(`Restricted egress compose file must define the devcontainer service: ${config.service}`);
+  } else {
+    requireText(devServiceBlock, "HTTP_PROXY: http://egress-proxy:3128", "Restricted egress devcontainer service");
+    requireText(devServiceBlock, "HTTPS_PROXY: http://egress-proxy:3128", "Restricted egress devcontainer service");
+    requireText(devServiceBlock, "devnet", "Restricted egress devcontainer service");
+    if (/\boutbound\b/.test(devServiceBlock)) {
+      fail("Restricted egress devcontainer service must not join the outbound network directly.");
+    }
+  }
+
+  if (!proxyServiceBlock) {
+    fail("Restricted egress compose file must define an egress-proxy service.");
+  } else {
+    requireText(proxyServiceBlock, "devnet", "Restricted egress proxy service");
+    requireText(proxyServiceBlock, "outbound", "Restricted egress proxy service");
+  }
+
+  if (!/image:\s*ubuntu\/squid:[^\s#]+/.test(composeText)) {
+    fail("Restricted egress compose file must use the ubuntu/squid proxy image with a pinned tag.");
+  }
+
+  if (/image:\s*ubuntu\/squid:(latest|edge)\b/.test(composeText)) {
+    fail("Restricted egress compose file must not use ubuntu/squid:latest or ubuntu/squid:edge.");
+  }
+
+  const squidPath = join(devcontainerDir, "squid.conf");
+  if (!existsSync(squidPath)) {
+    fail(`Restricted egress requires a Squid allowlist file: ${squidPath}`);
+  } else {
+    const squidText = readText(squidPath);
+    requireText(squidText, "acl allowed_domains dstdomain", "Squid allowlist");
+    requireText(squidText, "http_access allow allowed_domains", "Squid allowlist");
+    requireText(squidText, "http_access deny all", "Squid allowlist");
+
+    for (const domain of requiredSquidDomains) {
+      requireText(squidText, domain, "Squid allowlist");
     }
   }
 }

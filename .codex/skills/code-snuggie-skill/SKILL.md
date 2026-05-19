@@ -35,7 +35,7 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Check the official Dev Container Templates catalog when a repo closely matches a standard stack, but adapt the result to the repo instead of copying a generic template wholesale: https://containers.dev/templates
    - Add `.devcontainer/Dockerfile` only for apt packages, browser/system libraries, native build dependencies, or tools that should be cached in the image.
    - Use Docker Compose when the repo already depends on app-adjacent services or has a working compose setup. Keep the development service alive with a sleep loop if its normal command exits.
-   - For AI-agent-facing containers that need restricted egress, read `references/networking.md` and adapt `templates/egress-proxy/`, which uses Squid as the bundled default proxy implementation.
+   - For generated AI-agent-facing Codespaces, default to restricted egress. Read `references/networking.md` and adapt `templates/egress-proxy/`, which uses Squid as the bundled default proxy implementation. Use unrestricted egress only when validation proves the allowlist is not viable yet, and record the reason in `VALIDATION.md`.
 4. Preserve repo conventions:
    - Use the package manager and install mode implied by the lockfile.
    - Configure `postCreateCommand` or an equivalent lifecycle command so dependencies are installed before the user starts development.
@@ -60,6 +60,7 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
 8. Validate before handoff:
    - Read `references/validation.md`.
    - Run `npm run check:devcontainer -- <workspace>/.devcontainer/devcontainer.json` from the workbench when available.
+   - Run `npm run check:devcontainer -- --require-restricted-egress <workspace>/.devcontainer/devcontainer.json` before publishing generated AI-agent-facing Codespaces, unless unrestricted egress was explicitly approved and documented.
    - Use `npm test` for deterministic workbench fixtures.
    - Use `npm run test:live -- [remotion|excalidraw|all]` only when real network/package/GitHub validation is intended.
    - Build and start the dev container when Docker/devcontainer tooling is available.

@@ -28,11 +28,12 @@ assert_contains() {
 }
 
 echo "Checking safe fixture devcontainers..."
-node "$root/scripts/check-devcontainer.mjs" "$root/fixtures/acceptance/remotion/.devcontainer/devcontainer.json"
-node "$root/scripts/check-devcontainer.mjs" "$root/fixtures/acceptance/excalidraw/.devcontainer/devcontainer.json"
+node "$root/scripts/check-devcontainer.mjs" "$root/tests/fixtures/acceptance/remotion/.devcontainer/devcontainer.json"
+node "$root/scripts/check-devcontainer.mjs" "$root/tests/fixtures/acceptance/excalidraw/.devcontainer/devcontainer.json"
+node "$root/scripts/check-devcontainer.mjs" --require-restricted-egress "$root/tests/fixtures/acceptance/remotion/.devcontainer/devcontainer.json"
 
 echo "Checking unsafe fixture is rejected..."
-if node "$root/scripts/check-devcontainer.mjs" "$root/fixtures/acceptance/unsafe-devcontainer/.devcontainer/devcontainer.json" >"$tmp/unsafe-check.out" 2>&1; then
+if node "$root/scripts/check-devcontainer.mjs" "$root/tests/fixtures/acceptance/unsafe-devcontainer/.devcontainer/devcontainer.json" >"$tmp/unsafe-check.out" 2>&1; then
   cat "$tmp/unsafe-check.out" >&2
   echo "Unsafe fixture unexpectedly passed." >&2
   exit 1
@@ -67,6 +68,24 @@ if node "$root/scripts/check-devcontainer.mjs" "$tmp/overbroad-repo-access/.devc
 fi
 assert_contains "$tmp/overbroad-repo-access.out" "Overbroad Codespaces repository permission"
 
+mkdir -p "$tmp/missing-egress/.devcontainer"
+cat > "$tmp/missing-egress/.devcontainer/devcontainer.json" <<'EOF'
+{
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm",
+  "customizations": {
+    "vscode": {
+      "extensions": ["OpenAI.chatgpt"]
+    }
+  }
+}
+EOF
+if node "$root/scripts/check-devcontainer.mjs" --require-restricted-egress "$tmp/missing-egress/.devcontainer/devcontainer.json" >"$tmp/missing-egress.out" 2>&1; then
+  cat "$tmp/missing-egress.out" >&2
+  echo "Missing restricted-egress fixture unexpectedly passed." >&2
+  exit 1
+fi
+assert_contains "$tmp/missing-egress.out" "Restricted egress requires dockerComposeFile plus service"
+
 echo "Creating representative jobs..."
 CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" remotion https://www.npmjs.com/package/remotion >/dev/null
 CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" excalidraw https://github.com/excalidraw/excalidraw >/dev/null
@@ -75,8 +94,8 @@ assert_contains "$tmp/remotion-path.out" "job_dir=$tmp/jobs/remotion"
 assert_contains "$tmp/remotion-path.out" "workspace=$tmp/jobs/remotion/workspace"
 assert_contains "$tmp/remotion-path.out" "artifacts=$tmp/jobs/remotion/artifacts"
 
-cp -R "$root/fixtures/acceptance/remotion/." "$tmp/jobs/remotion/workspace/"
-cp -R "$root/fixtures/acceptance/excalidraw/." "$tmp/jobs/excalidraw/workspace/"
+cp -R "$root/tests/fixtures/acceptance/remotion/." "$tmp/jobs/remotion/workspace/"
+cp -R "$root/tests/fixtures/acceptance/excalidraw/." "$tmp/jobs/excalidraw/workspace/"
 
 assert_file "$tmp/jobs/remotion/JOB.md"
 assert_file "$tmp/jobs/remotion/SOURCE.json"
@@ -112,7 +131,7 @@ rm -rf "$tmp/jobs/secret-fixture"
 
 echo "Checking publish opens a PR from a shared-history branch..."
 CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" publish-fixture https://www.npmjs.com/package/remotion >/dev/null
-cp -R "$root/fixtures/acceptance/remotion/." "$tmp/jobs/publish-fixture/workspace/"
+cp -R "$root/tests/fixtures/acceptance/remotion/." "$tmp/jobs/publish-fixture/workspace/"
 git init --bare "$tmp/target.git" >/dev/null
 mkdir -p "$tmp/bin"
 cat > "$tmp/bin/gh" <<EOF

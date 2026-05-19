@@ -52,7 +52,7 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - The setup respects Excalidraw's current Yarn 1.22.22 workflow.
   - Validation includes install, practical configured checks/builds, and a dev-server smoke check.
 - Security:
-  - [ ] Decide whether generated devcontainers should default to restricted egress. Current V1 rejects unsafe networking and documents egress posture, but Remotion and Excalidraw use normal outbound package/development network access.
+  - [x] Generated devcontainers now default to restricted egress before publish, using a Squid sidecar with a Copilot-derived allowlist plus OpenAI/Codex domains. Temporary unrestricted egress requires explicit validation notes.
   - Unsafe privileges are removed or justified in `VALIDATION.md`.
   - No secrets are committed.
 
@@ -124,6 +124,12 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
 - 2026-05-19: Folded Excalidraw/Remotion live learnings back into the `code-snuggie` skill:
   - Added guidance for detecting effective ports from env/config instead of framework defaults.
   - Added guidance for image-level package-manager activation, finite non-interactive lifecycle commands, browser auto-open suppression, fresh-container validation after config changes, workflow permission limitations, and visible follow-up commits on PRs.
+- 2026-05-19: Made restricted egress actionable:
+  - Pinned the bundled Squid proxy image to `ubuntu/squid:6.6-24.04_beta` instead of floating `latest`.
+  - Reworked the Squid template around GitHub's Copilot cloud agent recommended host allowlist and added OpenAI/ChatGPT domains needed by Codex.
+  - Added `--require-restricted-egress` validation for internal-network Compose wiring, pinned Squid, proxy environment, and required allowlist entries.
+  - Made `job:publish` run the restricted-egress validation by default, with `CODE_SNUGGIE_ALLOW_UNRESTRICTED_EGRESS=1` reserved for documented exceptions.
+  - Moved acceptance fixtures under `tests/fixtures/acceptance/` and documented that they are test-only representative workspaces, not reusable templates.
 
 ## Assumptions
 

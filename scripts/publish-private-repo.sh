@@ -19,6 +19,8 @@ workspace="$job_dir/workspace"
 branch_name="${CODE_SNUGGIE_PUBLISH_BRANCH:-code-snuggie/$job_name}"
 base_branch="${CODE_SNUGGIE_PUBLISH_BASE:-main}"
 pr_title="${CODE_SNUGGIE_PUBLISH_PR_TITLE:-Create Codespaces-ready project}"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root="$(cd "$script_dir/.." && pwd)"
 
 has_git_identity() {
   if git config --get user.name >/dev/null && git config --get user.email >/dev/null; then
@@ -39,6 +41,17 @@ fi
 if [[ -z "$(find "$workspace" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
   echo "Workspace is empty: $workspace" >&2
   exit 65
+fi
+
+if [[ "${CODE_SNUGGIE_ALLOW_UNRESTRICTED_EGRESS:-}" != "1" ]]; then
+  if [[ ! -f "$workspace/.devcontainer/devcontainer.json" ]]; then
+    echo "Missing .devcontainer/devcontainer.json; refusing to publish a Codespaces repo without devcontainer validation." >&2
+    exit 78
+  fi
+
+  node "$root/scripts/check-devcontainer.mjs" \
+    --require-restricted-egress \
+    "$workspace/.devcontainer/devcontainer.json"
 fi
 
 (

@@ -1,6 +1,9 @@
 {
   "name": "Remotion Fixture",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -11,7 +14,6 @@
     }
   },
   "postCreateCommand": "npm install",
-  "remoteUser": "node",
   "forwardPorts": [
     3000
   ],

@@ -27,6 +27,7 @@ Run this reference before handing off any Codespaces/devcontainer setup. A devco
    - No Docker socket mount unless Docker control is required and the risk is documented.
    - No host SSH keys, cloud credentials, or production secrets mounted into the container.
    - No broad host port ranges published when `forwardPorts` is sufficient.
+   - Generated AI-agent-facing Codespaces use the Squid egress proxy template, an internal app network, a pinned `ubuntu/squid` image tag, and a checked allowlist unless unrestricted egress is explicitly approved and documented.
 8. Confirm secrets are not committed:
    - No real tokens, passwords, cloud keys, or private registry credentials.
    - Required secret names appear in `secrets` or documentation only.
@@ -46,6 +47,8 @@ Run this reference before handing off any Codespaces/devcontainer setup. A devco
 Use the Dev Container CLI when available:
 
 ```bash
+npm run check:devcontainer -- <workspace>/.devcontainer/devcontainer.json
+npm run check:devcontainer -- --require-restricted-egress <workspace>/.devcontainer/devcontainer.json
 devcontainer read-configuration --workspace-folder .
 devcontainer build --workspace-folder .
 devcontainer up --workspace-folder .
@@ -106,6 +109,7 @@ Check:
 - Required dependent services have local development defaults.
 - `shutdownAction` is usually `stopCompose`.
 - Restricted egress setups use an internal app network plus a proxy/firewall sidecar, and the allowlist is repo-specific.
+- When restricted egress is required, `npm run check:devcontainer -- --require-restricted-egress <workspace>/.devcontainer/devcontainer.json` passes before the repo is published.
 
 ## In-Container Project Validation
 
