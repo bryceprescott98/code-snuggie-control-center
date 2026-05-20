@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "UI-free Code Snuggie Control Center for running Codex as a devcontainer setup agent.",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "job:new": "bash scripts/new-job.sh",
