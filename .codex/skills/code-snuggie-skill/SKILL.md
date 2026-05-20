@@ -90,6 +90,12 @@ The npm commands below are for Codex to run from the Code Snuggie Control Center
    - If the available GitHub token cannot push `.github/workflows/*`, either omit workflow files from the generated PR branch and document that limitation, or stop and ask for a token/app with workflows permission when preserving workflows is required.
    - After a PR exists, prefer normal follow-up commits for fixes so updates are visible in the PR history. Use force-push only when intentionally replacing generated history, and say so explicitly.
    - In the Code Snuggie Control Center, use `npm run job:publish -- <job-name> <repo-name-or-owner/repo> [description]` when ambient `gh` auth is available.
+11. Review job learnings after the PR is open:
+   - Re-read `LOG.md`, `VALIDATION.md`, failed command output, and any notes from creating or validating the new codespace.
+   - Identify failures, flakes, manual workarounds, missing packages, wrong defaults, egress gaps, permission issues, port mistakes, lifecycle friction, or publish limitations that could recur in future jobs.
+   - Decide whether each learning belongs in the `code-snuggie` skill, a reference file, a template, `scripts/check-devcontainer.mjs`, acceptance fixtures, or only the job's `VALIDATION.md`.
+   - Update the reusable skill/templates/validations when the learning is general, low-risk, and supported by evidence from the job. Keep repo-specific quirks documented only in the job files or PR body.
+   - If no reusable update is warranted, explicitly note that in the final response.
 
 ## Approval Posture
 

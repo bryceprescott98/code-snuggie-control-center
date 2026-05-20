@@ -2,7 +2,7 @@
 
 ## Summary
 
-Code Snuggie is a UI-free Codespace project for running Codex as an autonomous repo-setup agent. The project provides a ready devcontainer, a precise `code-snuggie` skill, helper scripts, job folders, and acceptance fixtures so Codex can create Codespaces-ready private GitHub repositories from GitHub repo URLs or npm package specs.
+Code Snuggie Control Center is a UI-free Codespace project for running Codex as an autonomous repo-setup agent. The project provides a ready devcontainer, a precise `code-snuggie` skill, helper scripts, job folders, and acceptance fixtures so Codex can create Codespaces-ready private GitHub repositories from GitHub repo URLs or npm package specs.
 
 ## Key Changes
 
@@ -16,6 +16,8 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
 - [x] Add README guidance for humans and keep the canonical agent workflow in the `code-snuggie` skill.
 - [x] Add fixture-style acceptance checks for representative generated projects.
 - [x] Run full devcontainer build/start validation when Docker is available.
+- [x] Rename the project surface to Code Snuggie Control Center.
+- [x] Add Apache-2.0 licensing.
 
 ## GitHub Repo Handling
 
@@ -46,16 +48,17 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
   - [x] Codex can live-clone repos, install dependencies, and push generated repos without repeated routine permission prompts.
   - [x] Generated development containers install `ripgrep` and `jq` so Codex can navigate code and inspect structured command output inside the codespace.
 - Remotion:
-  - Given `https://www.npmjs.com/package/remotion`, Codex creates a repo equivalent to `npx create-video@latest`.
-  - The repo has devcontainer support, installs dependencies, runs available checks/builds, starts the Remotion dev workflow, and is pushed privately after validation.
+  - [x] Given `https://www.npmjs.com/package/remotion`, Codex creates a repo equivalent to `npx create-video@latest`.
+  - [x] The repo has devcontainer support, installs dependencies, runs available checks/builds, starts the Remotion dev workflow, and is pushed privately after validation.
 - Excalidraw:
-  - Given `https://github.com/excalidraw/excalidraw`, Codex creates a copied private repo with revised Codespaces support.
-  - The setup respects Excalidraw's current Yarn 1.22.22 workflow.
-  - Validation includes install, practical configured checks/builds, and a dev-server smoke check.
+  - [x] Given `https://github.com/excalidraw/excalidraw`, Codex creates a copied private repo with revised Codespaces support.
+  - [x] The setup respects Excalidraw's current Yarn 1.22.22 workflow.
+  - [x] Validation includes install, practical configured checks/builds, and a dev-server smoke check.
 - Security:
   - [x] Generated devcontainers now default to restricted egress before publish, using a Squid sidecar with a Copilot-derived allowlist plus OpenAI/Codex domains. Temporary unrestricted egress requires explicit validation notes.
-  - Unsafe privileges are removed or justified in `VALIDATION.md`.
-  - No secrets are committed.
+  - [x] Unsafe privileges are removed or justified in `VALIDATION.md`.
+  - [x] README documents that the Control Center itself uses Docker-in-Docker and therefore runs privileged inside the GitHub-hosted Codespaces VM.
+  - [x] No secrets are committed.
 
 ## Implementation Log
 
@@ -134,6 +137,17 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
 - 2026-05-19: Added baseline Codex navigation tools to generated container requirements:
   - Updated the `code-snuggie` skill, validation reference, egress template, and Node guidance so every generated development container includes `ripgrep` and `jq`.
   - Updated acceptance fixtures and static checks to reject devcontainers that do not explicitly install those tools.
+- 2026-05-20: Polished the project surface:
+  - Renamed user-facing project language to Code Snuggie Control Center across README, package metadata, devcontainer display name, tests docs, and the `code-snuggie` skill.
+  - Added a README security note explaining that Docker-in-Docker requires privileged mode, and that the impact is scoped to the GitHub-hosted Codespaces VM rather than the user's local machine.
+  - Added `LICENSE` with Apache License 2.0 text and set `package.json` `license` to `Apache-2.0`.
+- 2026-05-20: Added a post-PR learning loop to the `code-snuggie` skill:
+  - After opening a PR, Codex now reviews job failures and validation notes for reusable learnings.
+  - General learnings should be folded back into the skill, references, templates, static validation, or fixtures; repo-specific quirks stay in job notes or the PR body.
+
+## Remaining Work
+
+- No planned V1 implementation items remain open. Future work is optional product expansion, such as adding a web UI, more live starter fixtures, or richer publish/reporting ergonomics.
 
 ## Assumptions
 
