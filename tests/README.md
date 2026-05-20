@@ -1,6 +1,6 @@
 # Tests
 
-This directory contains test-only inputs and acceptance fixtures for the Code Snuggie workbench.
+This directory contains test-only inputs and acceptance fixtures for the Code Snuggie Control Center.
 
 - `fixtures/acceptance/remotion`: npm-starter fixture used to exercise generated workspace, restricted egress, and publish checks.
 - `fixtures/acceptance/excalidraw`: GitHub/Yarn Classic fixture used to exercise repository job setup and summary checks.

@@ -11,9 +11,9 @@ Create a dev container setup that works before handoff. Prefer a small, boring c
 
 ## Workflow
 
-The npm commands below are for Codex to run from the workbench. Do not ask the human to run them during a normal Code Snuggie job; the human should only provide the source repo or npm package and the destination GitHub repository.
+The npm commands below are for Codex to run from the Code Snuggie Control Center. Do not ask the human to run them during a normal Code Snuggie job; the human should only provide the source repo or npm package and the destination GitHub repository.
 
-1. Create or use a job workspace when operating from the Code Snuggie workbench:
+1. Create or use a job workspace when operating from the Code Snuggie Control Center:
    - Start with `npm run job:new -- <job-name> <github-url|npm-package-or-url>`.
    - Use `npm run job:path -- <job-name>` whenever there is any doubt about where a job lives.
    - For GitHub sources, clone with `npm run job:clone -- <job-name> <github-url> [ref]`.
@@ -64,9 +64,9 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Use `remoteEnv` or `containerEnv` only for non-secret defaults.
 9. Validate before handoff:
    - Read `references/validation.md`.
-   - Run `npm run check:devcontainer -- <workspace>/.devcontainer/devcontainer.json` from the workbench when available.
+   - Run `npm run check:devcontainer -- <workspace>/.devcontainer/devcontainer.json` from the Code Snuggie Control Center when available.
    - Run `npm run check:devcontainer -- --require-restricted-egress <workspace>/.devcontainer/devcontainer.json` before publishing generated AI-agent-facing Codespaces, unless unrestricted egress was explicitly approved and documented.
-   - Use `npm test` for deterministic workbench fixtures.
+   - Use `npm test` for deterministic Control Center fixtures.
    - Use `npm run test:live -- [remotion|excalidraw|all]` only when real network/package/GitHub validation is intended.
    - Build and start the dev container when Docker/devcontainer tooling is available.
    - Run the repo's install, checks, and start smoke test inside the container.
@@ -89,11 +89,11 @@ The npm commands below are for Codex to run from the workbench. Do not ask the h
    - Exclude generated `.git/`, dependency folders, build outputs, and local `.env*` files when copying a generated starter into the publish branch. Keep `.env.example` when it is intentional documentation.
    - If the available GitHub token cannot push `.github/workflows/*`, either omit workflow files from the generated PR branch and document that limitation, or stop and ask for a token/app with workflows permission when preserving workflows is required.
    - After a PR exists, prefer normal follow-up commits for fixes so updates are visible in the PR history. Use force-push only when intentionally replacing generated history, and say so explicitly.
-   - In the workbench, use `npm run job:publish -- <job-name> <repo-name-or-owner/repo> [description]` when ambient `gh` auth is available.
+   - In the Code Snuggie Control Center, use `npm run job:publish -- <job-name> <repo-name-or-owner/repo> [description]` when ambient `gh` auth is available.
 
 ## Approval Posture
 
-Routine workbench actions are expected inside this repository and `.code-snuggie/jobs/`: creating/updating job folders, cloning GitHub repositories into job workspaces, installing dependencies, running builds/tests/lints/dev-server smoke checks, running Dev Container validation, and creating private GitHub repositories or pull requests with ambient `gh` auth.
+Routine Control Center actions are expected inside this repository and `.code-snuggie/jobs/`: creating/updating job folders, cloning GitHub repositories into job workspaces, installing dependencies, running builds/tests/lints/dev-server smoke checks, running Dev Container validation, and creating private GitHub repositories or pull requests with ambient `gh` auth.
 
 Ask before boundary crossings: writing outside this workspace or job folders, destructive host operations, reading undeclared secrets, expanding network or egress assumptions, or adding privileged containers, host networking, host Docker socket mounts, or broad host credential mounts.
 

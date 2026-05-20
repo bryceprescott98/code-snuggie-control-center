@@ -1,4 +1,4 @@
-# Code Snuggie Agent Workbench
+# Code Snuggie Control Center
 
 ## Summary
 
@@ -38,7 +38,7 @@ Code Snuggie is a UI-free Codespace project for running Codex as an autonomous r
 
 ## Acceptance Tests
 
-- Workbench:
+- Control Center:
   - [x] This repo opens in Codespaces with Codex available as `OpenAI.chatgpt`.
   - [x] Required tools exist: `gh`, `git`, `node`, `npm`, `python`, `docker`, and `devcontainer`.
   - [x] Codex can create job folders and validate devcontainers.

@@ -1,5 +1,5 @@
 {
-  "name": "Code Snuggie Agent Workbench",
+  "name": "Code Snuggie Control Center",
   "build": {
     "dockerfile": "Dockerfile",
     "context": "."

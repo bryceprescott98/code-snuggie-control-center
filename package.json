@@ -2,7 +2,7 @@
   "name": "code-snuggie-app",
   "version": "0.1.0",
   "private": true,
-  "description": "UI-free Codespace workbench for running Codex as a devcontainer setup agent.",
+  "description": "UI-free Code Snuggie Control Center for running Codex as a devcontainer setup agent.",
   "type": "module",
   "scripts": {
     "job:new": "bash scripts/new-job.sh",

@@ -44,3 +44,7 @@ Code Snuggie is a an agent that creates a reliable devcontainer setup for anothe
 Codex will create the job under `.code-snuggie/jobs/<job-name>/workspace/`, validate the generated devcontainer, push a branch to the destination repository, and open a pull request. The command-level workflow lives in the local `code-snuggie` skill, not in this README.
 
 GitHub documents the repository-access prompt in [Managing access to other repositories within your codespace](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-repository-access-for-your-codespaces).
+
+## Security Note
+
+The Code Snuggie Control Center includes the Docker-in-Docker devcontainer extension so Codex can build and validate generated devcontainers. Docker-in-Docker requires the Control Center container to run in privileged mode, which has security implications because processes inside the codespace have more control over the codespace VM. Since this runs inside a GitHub-hosted Codespaces VM, that privileged access should not affect your local machine, but you should still treat the codespace itself as a privileged development environment.
