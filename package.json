@@ -1,5 +1,5 @@
 {
-  "name": "code-snuggie-app",
+  "name": "code-snuggie-control-center",
   "version": "0.1.0",
   "private": true,
   "description": "UI-free Code Snuggie Control Center for running Codex as a devcontainer setup agent.",

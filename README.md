@@ -25,7 +25,7 @@ Code Snuggie is a an agent that creates a reliable devcontainer setup for anothe
    }
    ```
 
-3. Commit and push that devcontainer change to this `code-snuggie-app` repository.
+3. Commit and push that devcontainer change to this `code-snuggie-control-center` repository.
 
 4. Create a new codespace from that commit and approve the repository-access prompt from GitHub.
 
