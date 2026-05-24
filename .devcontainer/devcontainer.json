@@ -41,12 +41,5 @@
     "CODE_SNUGGIE_JOBS_DIR": "${containerWorkspaceFolder}/.code-snuggie/jobs"
   },
   "postCreateCommand": "mkdir -p .code-snuggie/jobs && git config --global --add safe.directory ${containerWorkspaceFolder} && devcontainer --version && gh --version && docker --version",
-  "remoteUser": "node",
-  "forwardPorts": [],
-  "portsAttributes": {},
-  "hostRequirements": {
-    "cpus": 4,
-    "memory": "8gb",
-    "storage": "32gb"
-  }
+  "remoteUser": "node"
 }
