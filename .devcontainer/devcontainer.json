@@ -33,6 +33,12 @@
             "contents": "write",
             "pull_requests": "write"
           }
+        },
+        "Square-Zero-Labs/code-snuggie-manim": {
+          "permissions": {
+            "contents": "write",
+            "pull_requests": "write"
+          }
         }
       }
     }
