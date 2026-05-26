@@ -45,6 +45,7 @@ The npm commands below are for Codex to run from the Code Snuggie Control Center
    - Use the package manager and install mode implied by the lockfile.
    - Configure `postCreateCommand` or an equivalent lifecycle command so dependencies are installed before the user starts development.
    - Keep the interactive development user non-root, normally the devcontainer image's `vscode` user. Do not set `remoteUser`, Compose `user`, or app/lifecycle commands to `root` unless the repo has a documented requirement and the risk is explained.
+   - Do not add passwordless sudo for generated users by default, including sudoers entries such as `vscode ALL=(root) NOPASSWD:ALL`. If a repo has a documented development need for sudo inside the running container, explain the risk in `VALIDATION.md` and keep the permission as narrow as practical.
    - Use the runtime version implied by repo files; if no version is discoverable, choose the current stable official devcontainer image and note the assumption.
    - Do not replace existing Docker/Compose semantics unless they are clearly unsuitable for development.
    - Keep lifecycle commands non-interactive and finite. If a package-manager shim or tool activation needs root-owned global paths, do that in the image build instead of in `postCreateCommand`.
