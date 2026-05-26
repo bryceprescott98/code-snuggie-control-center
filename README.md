@@ -1,5 +1,7 @@
 # Code Snuggie
 
+![Code Snuggie character](assets/small-code-snuggie-character-no-bg.png)
+
 Code Snuggie is a an agent that creates a reliable devcontainer setup for another repository or npm starter. The human setup is intentionally small: give this codespace permission to write to the destination repository, start a fresh codespace, and ask Codex to do the rest.
 
 ## Human Setup
@@ -16,12 +18,12 @@ Code Snuggie is a an agent that creates a reliable devcontainer setup for anothe
            "my-org/my-generated-app": {
              "permissions": {
                "contents": "write",
-               "pull_requests": "write"
-             }
-           }
-         }
-       }
-     }
+               "pull_requests": "write",
+             },
+           },
+         },
+       },
+     },
    }
    ```
 
