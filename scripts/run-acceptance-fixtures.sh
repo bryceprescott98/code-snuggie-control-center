@@ -232,6 +232,24 @@ case "\$1 \$2" in
 esac
 EOF
 chmod +x "$tmp/bin/gh"
+
+CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" ignored-devcontainer https://www.npmjs.com/package/remotion >/dev/null
+cp -R "$root/tests/fixtures/acceptance/remotion/." "$tmp/jobs/ignored-devcontainer/workspace/"
+printf '*.conf\n' > "$tmp/jobs/ignored-devcontainer/workspace/.gitignore"
+if env \
+  PATH="$tmp/bin:$PATH" \
+  CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" \
+  GIT_AUTHOR_NAME="Fixture User" \
+  GIT_AUTHOR_EMAIL="fixture@example.test" \
+  GIT_COMMITTER_NAME="Fixture User" \
+  GIT_COMMITTER_EMAIL="fixture@example.test" \
+  bash "$root/scripts/publish-private-repo.sh" ignored-devcontainer fixture/repo "Ignored devcontainer fixture" >"$tmp/ignored-devcontainer.out" 2>&1; then
+  cat "$tmp/ignored-devcontainer.out" >&2
+  echo "Ignored devcontainer support file unexpectedly published." >&2
+  exit 1
+fi
+assert_contains "$tmp/ignored-devcontainer.out" "Devcontainer support files are ignored"
+
 env \
   PATH="$tmp/bin:$PATH" \
   CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" \

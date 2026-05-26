@@ -112,6 +112,24 @@ fi
     "$workspace_abs/" \
     ./
 
+  if [[ -d ".devcontainer" ]]; then
+    mapfile -d '' ignored_devcontainer_files < <(
+      find .devcontainer -type f -print0 \
+        | while IFS= read -r -d '' file; do
+          if git check-ignore -q "$file"; then
+            printf '%s\0' "$file"
+          fi
+        done
+    )
+
+    if ((${#ignored_devcontainer_files[@]} > 0)); then
+      echo "Devcontainer support files are ignored by the destination .gitignore; refusing to publish missing PR files." >&2
+      git check-ignore -v -- "${ignored_devcontainer_files[@]}" >&2 || true
+      echo "Add a narrow .gitignore exception for each generated devcontainer support file that must be committed." >&2
+      exit 78
+    fi
+  fi
+
   git add .
 
   mapfile -d '' publishable_files < <(git ls-files --cached --others --exclude-standard -z)
