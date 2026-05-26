@@ -15,4 +15,14 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /etc/docker \
+    && printf '%s\n' \
+      '{' \
+      '  "features": {' \
+      '    "containerd-snapshotter": false' \
+      '  },' \
+      '  "storage-driver": "overlay2"' \
+      '}' \
+      > /etc/docker/daemon.json
+
 RUN id node
