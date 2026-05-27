@@ -2,13 +2,27 @@
 
 ![Code Snuggie character](assets/small-code-snuggie-character-no-bg.png)
 
-Code Snuggie is a an agent that creates a reliable devcontainer setup for another repository or npm starter. The human setup is intentionally small: give this codespace permission to write to the destination repository, start a fresh codespace, and ask Codex to do the rest.
+Code Snuggie is an agent that creates a reliable devcontainer setup for another GitHub repository or npm starter. The human setup is intentionally small: create a new repo for your project, give the Code Snuggie Control Center codespace permission to write to that destination repository and ask Code Snuggie to do the rest.
+
+## Why Code Snuggie?
+
+- 🛡️ **Worried about supply-chain attacks** or running unknown code on your local machine?
+- 🤖 **Tired of approving every tiny step** for your coding agent, but not comfortable going full YOLO on your own computer?
+- 🐳 **Hate writing Dockerfiles, fixing devcontainer configs, and installing dependencies** before you can actually build or try anything?
+
+Same.
+
+**Code Snuggie helps get a GitHub repo or starter package running in a Codespace sandbox in minutes** without making you hand-write the Dockerfile or devcontainer setup first.
+
+Once you are inside your **Code Snuggie-prepped Codespace**, Codex is there to help you inspect, run, and modify the code.
+
+And because you are in a **Codespace** — not on your local machine — you can let Codex move faster without that _“what did I just approve?”_ feeling.
 
 ## Human Setup
 
 1. Create an empty GitHub repository for the generated project, such as `my-org/my-generated-app`.
 
-2. In this repository, update [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) so Codespaces can write to that exact destination repository. Keep this least-privilege; the normal Code Snuggie workflow needs only `contents: write` and `pull_requests: write`.
+2. Separately, clone this repository and update [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) so Codespaces can write to the destination repository you created in Step 1. Keep this least-privilege; the normal Code Snuggie workflow needs only `contents: write` and `pull_requests: write`. Add the new destination repository to [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) like this:
 
    ```jsonc
    {
@@ -27,25 +41,21 @@ Code Snuggie is a an agent that creates a reliable devcontainer setup for anothe
    }
    ```
 
-3. Commit and push that devcontainer change to this `code-snuggie-control-center` repository.
+   See further details regarding managing access to other repositories within a codespace [here](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-repository-access-for-your-codespaces).
 
-4. Create a new codespace from that commit and approve the repository-access prompt from GitHub.
+3. Commit and push that devcontainer change to your forked `code-snuggie-control-center` repository.
 
-5. Before starting the Codex thread, select **Full Access** for the thread permissions. Use a more restrictive permission mode only if you want Codex to ask before routine actions like creating files, installing dependencies, running checks, committing, pushing, or opening a pull request.
+4. Create a new codespace from your Code Snuggie Control Center fork and approve the repository-access prompt from GitHub.
+
+5. Connect to Codex in your Code Snuggie Control Center codespace. Before starting the Codex thread, select **Full Access** for the thread permissions. Use a more restrictive permission mode only if you want Codex to ask before routine actions like creating files, installing dependencies, running checks, committing, pushing, or opening a pull request.
 
 6. Ask Codex what you want generated. Examples:
 
-   ```text
-   Create a Codespaces-ready repo for https://github.com/excalidraw/excalidraw and open a PR to my-org/my-generated-app.
-   ```
+   > Create a Codespaces-ready repo for https://github.com/excalidraw/excalidraw and open a PR to my-org/my-generated-app.
 
-   ```text
-   Create a Codespaces-ready Remotion starter from https://www.npmjs.com/package/remotion and open a PR to my-org/my-generated-app.
-   ```
+   > Create a Codespaces-ready Remotion starter from https://www.npmjs.com/package/remotion and open a PR to my-org/my-generated-app.
 
-Codex will create the job under `.code-snuggie/jobs/<job-name>/workspace/`, validate the generated devcontainer, push a branch to the destination repository, and open a pull request. The command-level workflow lives in the local `code-snuggie` skill, not in this README.
-
-GitHub documents the repository-access prompt in [Managing access to other repositories within your codespace](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-repository-access-for-your-codespaces).
+Codex will use the Code Snuggie skill and scripts to create the job under `.code-snuggie/jobs/<job-name>/workspace/`, validate the generated devcontainer, push a branch to the destination repository, and open a pull request.
 
 ## Security Note
 
