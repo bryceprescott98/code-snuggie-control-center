@@ -204,6 +204,8 @@ echo "Checking publish opens a PR from a shared-history branch..."
 CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" publish-fixture https://www.npmjs.com/package/remotion >/dev/null
 cp -R "$root/tests/fixtures/acceptance/remotion/." "$tmp/jobs/publish-fixture/workspace/"
 git init --bare "$tmp/target.git" >/dev/null
+git init --bare "$tmp/ignored-target.git" >/dev/null
+git init --bare "$tmp/same-repo-target.git" >/dev/null
 mkdir -p "$tmp/bin"
 cat > "$tmp/bin/gh" <<EOF
 #!/usr/bin/env bash
@@ -211,7 +213,13 @@ set -euo pipefail
 case "\$1 \$2" in
   "repo view")
     if [[ "\$*" == *"--json url"* ]]; then
-      printf '%s\n' "$tmp/target.git"
+      case "\$3" in
+        fixture/ignored) printf '%s\n' "$tmp/ignored-target.git" ;;
+        fixture/same) printf '%s\n' "$tmp/same-repo-target.git" ;;
+        *) printf '%s\n' "$tmp/target.git" ;;
+      esac
+    elif [[ "\$*" == *"--json nameWithOwner"* ]]; then
+      printf '%s\n' "\$3"
     elif [[ "\$*" == *"--json defaultBranchRef"* ]]; then
       printf '\n'
     fi
@@ -243,12 +251,46 @@ if env \
   GIT_AUTHOR_EMAIL="fixture@example.test" \
   GIT_COMMITTER_NAME="Fixture User" \
   GIT_COMMITTER_EMAIL="fixture@example.test" \
-  bash "$root/scripts/publish-private-repo.sh" ignored-devcontainer fixture/repo "Ignored devcontainer fixture" >"$tmp/ignored-devcontainer.out" 2>&1; then
+  bash "$root/scripts/publish-private-repo.sh" ignored-devcontainer fixture/ignored "Ignored devcontainer fixture" >"$tmp/ignored-devcontainer.out" 2>&1; then
   cat "$tmp/ignored-devcontainer.out" >&2
   echo "Ignored devcontainer support file unexpectedly published." >&2
   exit 1
 fi
 assert_contains "$tmp/ignored-devcontainer.out" "Devcontainer support files are ignored"
+
+CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" bash "$root/scripts/new-job.sh" same-repo-access https://www.npmjs.com/package/remotion >/dev/null
+cp -R "$root/tests/fixtures/acceptance/remotion/." "$tmp/jobs/same-repo-access/workspace/"
+node --input-type=module - "$tmp/jobs/same-repo-access/workspace/.devcontainer/devcontainer.json" <<'NODE'
+import { readFileSync, writeFileSync } from "node:fs";
+
+const path = process.argv[2];
+const config = JSON.parse(readFileSync(path, "utf8"));
+config.customizations ??= {};
+  config.customizations.codespaces = {
+  repositories: {
+    "fixture/same": {
+      permissions: {
+        contents: "write",
+        pull_requests: "write"
+      }
+    }
+  }
+};
+writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
+NODE
+if env \
+  PATH="$tmp/bin:$PATH" \
+  CODE_SNUGGIE_JOBS_DIR="$tmp/jobs" \
+  GIT_AUTHOR_NAME="Fixture User" \
+  GIT_AUTHOR_EMAIL="fixture@example.test" \
+  GIT_COMMITTER_NAME="Fixture User" \
+  GIT_COMMITTER_EMAIL="fixture@example.test" \
+  bash "$root/scripts/publish-private-repo.sh" same-repo-access fixture/same "Same repo access fixture" >"$tmp/same-repo-access.out" 2>&1; then
+  cat "$tmp/same-repo-access.out" >&2
+  echo "Same-repository Codespaces access unexpectedly published." >&2
+  exit 1
+fi
+assert_contains "$tmp/same-repo-access.out" "Devcontainer requests Codespaces repository access for its own destination repo"
 
 env \
   PATH="$tmp/bin:$PATH" \

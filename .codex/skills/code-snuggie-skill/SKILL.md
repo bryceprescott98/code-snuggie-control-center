@@ -55,7 +55,8 @@ The npm commands below are for Codex to run from the Code Snuggie Control Center
    - Add stack-specific extensions only when they clearly improve first-open use, such as `dbaeumer.vscode-eslint`, `esbenp.prettier-vscode`, `ms-python.python`, `ms-python.vscode-pylance`, or `ms-python.black-formatter`.
 7. Limit Codespaces repository access:
    - Treat `customizations.codespaces.repositories` as a sensitive privilege boundary because repo startup code, lifecycle commands, package scripts, and extensions can run with the Codespaces token.
-   - Grant access only to exact destination repositories needed for the job. Do not use broad owner/org patterns or extra repositories for convenience.
+   - Do not add `customizations.codespaces.repositories` for the repository the Codespace will be opened from; Codespaces already grants its token access to that repository according to the repo's Codespaces permissions.
+   - Grant access only to exact additional repositories needed for the job. Do not use broad owner/org patterns or extra repositories for convenience.
    - Default destination-repo permissions are only `contents: write` and `pull_requests: write`; omit everything else unless the user explicitly approves and the reason is recorded in `VALIDATION.md`.
    - Do not grant `actions`, `workflows`, `administration`, `packages`, `secrets`, or other write scopes by default. If workflow-file changes are required, prefer documenting the limitation or asking for a narrowly scoped follow-up token/app instead of broadening the Codespaces token.
    - Confirm generated devcontainers do not request expanded repository permissions unless the target project itself has a clear Codespaces need.

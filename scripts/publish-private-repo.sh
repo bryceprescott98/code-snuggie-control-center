@@ -68,6 +68,7 @@ fi
   fi
 
   repo_url="$(gh repo view "$repo_name" --json url --jq '.url')"
+  repo_full_name="$(gh repo view "$repo_name" --json nameWithOwner --jq '.nameWithOwner')"
   default_branch="$(gh repo view "$repo_name" --json defaultBranchRef --jq '.defaultBranchRef.name // ""')"
 
   rm -rf "$publish_dir"
@@ -126,6 +127,27 @@ fi
       echo "Devcontainer support files are ignored by the destination .gitignore; refusing to publish missing PR files." >&2
       git check-ignore -v -- "${ignored_devcontainer_files[@]}" >&2 || true
       echo "Add a narrow .gitignore exception for each generated devcontainer support file that must be committed." >&2
+      exit 78
+    fi
+  fi
+
+  if [[ -f ".devcontainer/devcontainer.json" ]]; then
+    destination_repo_permission="$(node --input-type=module - "$repo_full_name" <<'NODE'
+import { readFileSync } from "node:fs";
+
+const repo = process.argv[2];
+const config = JSON.parse(readFileSync(".devcontainer/devcontainer.json", "utf8"));
+const repositories = config.customizations?.codespaces?.repositories;
+
+if (repositories && Object.hasOwn(repositories, repo)) {
+  console.log(repo);
+}
+NODE
+)"
+
+    if [[ -n "$destination_repo_permission" ]]; then
+      echo "Devcontainer requests Codespaces repository access for its own destination repo: $destination_repo_permission" >&2
+      echo "Codespaces opened from that repo already receive the repo token; remove the redundant customizations.codespaces.repositories entry." >&2
       exit 78
     fi
   fi
