@@ -6,7 +6,7 @@
 
 - The current version targets Python and Node.js projects.
 - The human setup is intentionally small:
-  - create a new repo for your project,
+  - choose a destination repo for your project,
   - give Code Snuggie Control Center permission to write to that destination repo and
   - ask Code Snuggie to do the rest.
 
@@ -26,9 +26,12 @@ And because you are in a **Codespace** — not on your local machine — you can
 
 ## Human Setup
 
-1. Create an empty GitHub repository for the generated project, such as `my-org/my-generated-app`.
+1. Choose a destination GitHub repository:
 
-2. Separately, clone this repository and update [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) so Codespaces can write to the destination repository you created in Step 1. Keep this least-privilege; the normal Code Snuggie workflow needs only `contents: write` and `pull_requests: write`. Add the new destination repository to [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) like this:
+   - For a standalone sandbox or a new generated project, create an empty repository, such as `my-org/my-generated-app`.
+   - If you plan to work on code from an existing source repository and may contribute back later, fork that source repository and use your fork as the destination. This keeps the Code Snuggie branch connected to the original repository's history, so you can continue working in a Codespace on your fork and later open a normal upstream pull request from your fork when you are ready.
+
+2. Separately, clone this repository and update [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) so Codespaces can write to the destination repository you chose in Step 1. Keep this least-privilege; the normal Code Snuggie workflow needs only `contents: write` and `pull_requests: write`. Add the destination repository to [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) like this:
 
    ```jsonc
    {
@@ -59,9 +62,11 @@ And because you are in a **Codespace** — not on your local machine — you can
 
    > Create a Codespaces-ready repo for https://github.com/excalidraw/excalidraw and open a PR to my-org/my-generated-app.
 
+   > Create a Codespaces-ready repo for https://github.com/excalidraw/excalidraw and open a PR to my-user/excalidraw, which is my fork.
+
    > Create a Codespaces-ready Remotion starter from https://www.npmjs.com/package/remotion and open a PR to my-org/my-generated-app.
 
-Codex will use the Code Snuggie skill and scripts to create the job under `.code-snuggie/jobs/<job-name>/workspace/`, validate the generated devcontainer, push a branch to the destination repository, and open a pull request.
+Codex will use the Code Snuggie skill and scripts to create the job under `.code-snuggie/jobs/<job-name>/workspace/`, validate the generated devcontainer, push a branch to the destination repository, and open a pull request. If the destination is your fork of the source repository, that pull request is only for landing the Codespaces setup on your fork. You can then open a Codespace from the prepared branch, make your actual contribution changes there, and later open an upstream pull request from your fork to the original repository.
 
 ## Current Support
 

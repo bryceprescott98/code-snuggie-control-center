@@ -11,7 +11,7 @@ Create a dev container setup that works before handoff. Prefer a small, boring c
 
 ## Workflow
 
-The npm commands below are for Codex to run from the Code Snuggie Control Center. Do not ask the human to run them during a normal Code Snuggie job; the human should only provide the source repo or npm package and the destination GitHub repository.
+The npm commands below are for Codex to run from the Code Snuggie Control Center. Do not ask the human to run them during a normal Code Snuggie job; the human should only provide the source repo or npm package and the destination GitHub repository. The destination may be an empty standalone repo or, when the human wants a Codespaces-ready branch for working on an existing project, their fork of the source repo.
 
 1. Create or use a job workspace when operating from the Code Snuggie Control Center:
    - Start with `npm run job:new -- <job-name> <github-url|npm-package-or-url>`.
@@ -25,6 +25,7 @@ The npm commands below are for Codex to run from the Code Snuggie Control Center
 2. Inspect the destination repository before publishing assumptions leak into the job:
    - Before opening or updating a PR, inspect the target repository's default branch and existing files with `gh repo view`, `gh api repos/<owner>/<repo>/contents`, or a clean clone.
    - Treat target `main` as real project context, even when generating from an npm starter. Preserve or intentionally replace existing files only after looking at them.
+   - If the destination repository is a fork of the GitHub source repo, treat the job as fork-workspace mode: base the publish branch on the fork's default branch, keep the diff focused on Code Snuggie's Codespaces setup, and avoid replacing unrelated upstream files. The Code Snuggie PR prepares the fork for work in Codespaces; it is not the upstream contribution PR.
    - Do not publish directly from a generated starter's own `.git` history. Many starter CLIs initialize git; use a clean clone of the destination repo or `npm run job:publish`, which publishes from `.code-snuggie/jobs/<job-name>/publish/` so the PR branch shares history with the target default branch.
 3. Inspect the source repo before choosing a container shape:
    - Manifests and lockfiles: `package.json`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `pyproject.toml`, `requirements*.txt`, `uv.lock`, `poetry.lock`, `Pipfile.lock`, `environment.yml`.
@@ -88,6 +89,7 @@ The npm commands below are for Codex to run from the Code Snuggie Control Center
    - Do not run `git config` or override the commit author. Use the current git identity or standard `GIT_AUTHOR_*` / `GIT_COMMITTER_*` environment variables.
    - Publish by pull request. If the target repository is empty, seed its base branch with an empty commit before committing the generated workspace so the PR branch shares history with the base branch and no rebase is needed.
    - Always inspect the destination default branch before the final publish step. If it already has files, publish from a branch based on that default branch and note any overwritten or removed files in the PR body.
+   - For fork destinations, do not seed or recreate base history. Preserve the fork's upstream-derived history, publish the Code Snuggie changes as a normal branch on the fork, and explain in the PR body that the branch is intended to prepare a Codespace for future work on the original project.
    - Exclude generated `.git/`, dependency folders, build outputs, and local `.env*` files when copying a generated starter into the publish branch. Keep `.env.example` when it is intentional documentation.
    - After copying into the publish branch and before committing, check the new project's `.gitignore` and exclude rules against intended generated files, especially `.devcontainer/*` support files such as `squid.conf`, Compose overrides, and helper scripts. If any intended PR file is ignored, add a narrow exception such as `!.devcontainer/squid.conf` or stop and fix it before pushing.
    - If the available GitHub token cannot push `.github/workflows/*`, either omit workflow files from the generated PR branch and document that limitation, or stop and ask for a token/app with workflows permission when preserving workflows is required.
