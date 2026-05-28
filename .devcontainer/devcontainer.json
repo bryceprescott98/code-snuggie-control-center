@@ -27,6 +27,12 @@
             "contents": "write",
             "pull_requests": "write"
           }
+        },
+        "Square-Zero-Labs/remotion-demo": {
+          "permissions": {
+            "contents": "write",
+            "pull_requests": "write"
+          }
         }
       }
     }
