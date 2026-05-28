@@ -2,7 +2,13 @@
 
 ![Code Snuggie character](assets/small-code-snuggie-character-no-bg.png)
 
-Code Snuggie is an agent that creates a reliable devcontainer setup for another GitHub repository or npm starter. The human setup is intentionally small: create a new repo for your project, give the Code Snuggie Control Center codespace permission to write to that destination repository and ask Code Snuggie to do the rest.
+#### Code Snuggie is an AI agent that turns repos and packages into ready-to-use Codespaces
+
+- The current version targets Python and Node.js projects.
+- The human setup is intentionally small:
+  - create a new repo for your project,
+  - give Code Snuggie Control Center permission to write to that destination repo and
+  - ask Code Snuggie to do the rest.
 
 ## Why Code Snuggie?
 
@@ -56,6 +62,10 @@ And because you are in a **Codespace** — not on your local machine — you can
    > Create a Codespaces-ready Remotion starter from https://www.npmjs.com/package/remotion and open a PR to my-org/my-generated-app.
 
 Codex will use the Code Snuggie skill and scripts to create the job under `.code-snuggie/jobs/<job-name>/workspace/`, validate the generated devcontainer, push a branch to the destination repository, and open a pull request.
+
+## Current Support
+
+Code Snuggie currently supports Python and Node.js projects. If you would like support for another language or stack, please open an issue.
 
 ## Security Note
 
