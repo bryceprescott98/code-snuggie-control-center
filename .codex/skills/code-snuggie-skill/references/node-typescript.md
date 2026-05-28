@@ -61,6 +61,7 @@ Add tools based on repo evidence:
 - Browser projects with Puppeteer, Playwright, Cypress, screenshot tests, PDF rendering, or browser-based scraping: install the required browsers/system libraries. Prefer the tool's documented install command when it is repo-specific.
 - Puppeteer projects: ensure Chromium can run in the container. If relying on Puppeteer's bundled browser, install system libraries it needs; if using distro Chromium, set the repo's expected executable path without hardcoding secrets.
 - Playwright projects: run the package manager install first, then `npx playwright install --with-deps` or the equivalent package-manager command.
+- Remotion projects: install Chromium and ffmpeg in the image. In restricted-egress containers, configure Remotion to use the system Chromium executable when available, for example `Config.setBrowserExecutable("/usr/bin/chromium")`, because render/composition commands may otherwise try to download Chrome Headless Shell directly and bypass the proxy-aware package-manager path.
 - Video/audio projects using `ffmpeg`, `fluent-ffmpeg`, waveform generation, transcoding, thumbnails, or media metadata: install `ffmpeg` in the Dockerfile.
 - Image/native projects using `sharp`, `canvas`, `node-gyp`, SQLite, or similar native modules: include `build-essential`, `python3`, `pkg-config`, and the specific development libraries the package documents.
 - Database-backed apps: include only helpful client CLIs when they support normal dev workflows, such as `postgresql-client` for Postgres or `default-mysql-client` for MySQL.
