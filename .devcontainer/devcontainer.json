@@ -22,7 +22,7 @@
     },
     "codespaces": {
       "repositories": {
-        "Square-Zero-Labs/code-snuggie-excalidraw": {
+        "Square-Zero-Labs/remotion-demo": {
           "permissions": {
             "contents": "write",
             "pull_requests": "write"
