@@ -1,8 +1,8 @@
 # Code Snuggie
 
-![Code Snuggie character](assets/small-code-snuggie-character-no-bg.png)
+![Code Snuggie character](assets/code-snuggie-character-readme.png)
 
-#### Code Snuggie is an AI agent that turns repos and packages into ready-to-use Codespaces
+### Code Snuggie is an AI agent that turns repos and packages into ready-to-use Codespaces
 
 - The current version targets Python and Node.js projects.
 - The human setup is intentionally small:
@@ -24,10 +24,17 @@ Once you are inside your **Code Snuggie-prepped Codespace**, Codex is there to h
 
 And because you are in a **Codespace** — not on your local machine — you can let Codex move faster without that _“what did I just approve?”_ feeling.
 
+## Tutorial Walkthrough
+
+<a href="https://youtu.be/_0T5GltR2O8">
+  <img src="https://img.youtube.com/vi/_0T5GltR2O8/maxresdefault.jpg" alt="Watch the Code Snuggie tutorial on YouTube" width="320">
+</a>
+
+[Watch the Code Snuggie tutorial on YouTube](https://youtu.be/_0T5GltR2O8)
+
 ## Human Setup
 
 1. Choose a destination GitHub repository:
-
    - For a standalone sandbox or a new generated project, create an empty repository, such as `my-org/my-generated-app`.
    - If you plan to work on code from an existing source repository and may contribute back later, fork that source repository and use your fork as the destination. This keeps the Code Snuggie branch connected to the original repository's history, so you can continue working in a Codespace on your fork and later open a normal upstream pull request from your fork when you are ready.
 
