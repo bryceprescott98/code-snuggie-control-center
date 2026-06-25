@@ -22,7 +22,7 @@
     },
     "codespaces": {
       "repositories": {
-        "Square-Zero-Labs/remotion-demo": {
+        "Square-Zero-Labs/hyperframes": {
           "permissions": {
             "contents": "write",
             "pull_requests": "write"
