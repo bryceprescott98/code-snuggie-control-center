@@ -22,7 +22,7 @@
     },
     "codespaces": {
       "repositories": {
-        "Square-Zero-Labs/remotion-demo": {
+        "bryceprescott98/bryce-bot-ai": {
           "permissions": {
             "contents": "write",
             "pull_requests": "write"
