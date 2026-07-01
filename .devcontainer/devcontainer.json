@@ -22,7 +22,7 @@
     },
     "codespaces": {
       "repositories": {
-        "Square-Zero-Labs/hyperframes": {
+        "bryceprescott98/BBotAI": {
           "permissions": {
             "contents": "write",
             "pull_requests": "write"
