@@ -22,7 +22,7 @@
     },
     "codespaces": {
       "repositories": {
-        "bryceprescott98/BBotAI": {
+        "bryceprescott98/bryce-bot-ai": {
           "permissions": {
             "contents": "write",
             "pull_requests": "write"
